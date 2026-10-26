@@ -31,7 +31,7 @@ From the repository root:
 cargo check                 # fast type-level feedback
 cargo build                 # debug build
 cargo build --release       # optimised build (needed for realistic UI performance)
-cargo run -p PACKAGE        # replace PACKAGE once the package name is verified
+cargo run -p kaffein        # desktop binary (verified 2026-10-26)
 ```
 
 Rules of thumb:
@@ -193,15 +193,18 @@ is `Unknown` — do not guess.
 
 | Fact | Value | Status | Evidence | Date |
 |---|---|---|---|---|
-| Workspace members | `TBD` | `Unknown` | `cargo metadata --no-deps --format-version 1` | — |
-| Main binary / package | `TBD` | `Unknown` | `cargo metadata` targets | — |
-| Rust toolchain / MSRV | `TBD` | `Unknown` | `rust-toolchain.toml`, `Cargo.toml` | — |
-| Supported operating systems | `TBD` | `Unknown` | CI matrix, release workflow | — |
-| CI gates | `TBD` | `Unknown` | CI configuration | — |
-| Required environment variables | `TBD` | `Unknown` | settings/bootstrap code | — |
-| Logging configuration | `TBD` | `Unknown` | logging initialisation | — |
-| Automation entry points | `TBD` | `Unknown` | CLI package, control channel code | — |
-| JDK discovery order | `TBD` | `Unknown` | infrastructure module | — |
+| Workspace members | `kaffein`, `kaffein-app`, `kaffein-domain`, `kaffein-infra`, `kaffein-ui` | `Implemented` | `cargo metadata --no-deps --format-version 1` | 2026-10-26 |
+| Main binary / package | `kaffein`, target `crates/kaffein/src/main.rs` | `Implemented` | `cargo metadata` targets | 2026-10-26 |
+| Rust toolchain / MSRV | Pinned `1.98.1`; MSRV declared `1.85` but only `1.98.1` has built the workspace | `Partial` | `rust-toolchain.toml`, `[workspace.package] rust-version` | 2026-10-26 |
+| Supported operating systems | Windows (window launched); macOS and Linux unverified | `Partial` | `target\debug\kaffein.exe`, window title `Kaffein` | 2026-10-26 |
+| CI gates | None configured | `Unknown` | no `.github/workflows` or other CI configuration in the repository | 2026-10-26 |
+| Required environment variables | None | `Implemented` | `crates/kaffein/src/main.rs` constructs services without reading the environment; launch succeeded | 2026-10-26 |
+| Logging configuration | No subscriber or log file; command outcomes surface in the status bar | `Partial` | `kaffein_app::Workspace::record_outcome`; gap: persistent logs and `RUST_LOG` integration | 2026-10-26 |
+| Automation entry points | None | `Planned` | no CLI, socket listener, or control channel in the workspace | 2026-10-26 |
+| JDK discovery order | Not implemented | `Planned` | no JDK module in the workspace | 2026-10-26 |
+| GUI backend | `eframe 0.29.1` with `glow` and bundled default fonts | `Implemented` | `Cargo.toml`; `cargo tree --depth 1 -p kaffein` | 2026-10-26 |
+| Build, format, lint, test | `cargo check --workspace`, `cargo fmt --all -- --check`, `cargo clippy --all-targets --all-features -- -D warnings`, `cargo test --workspace` all passed; 39 tests | `Verified` | command output | 2026-10-26 |
+| App launch smoke test | Debug binary stayed running for 6 s with window title `Kaffein` and empty stderr | `Verified` | `Start-Process .\target\debug\kaffein.exe` | 2026-10-26 |
 
 ## Verification
 
@@ -214,3 +217,4 @@ is `Unknown` — do not guess.
 6. Choose a profiler, record the tool, version, and command, and attach one capture to a budgeted
    scenario; until then the Profiling table stays `Unknown`.
 7. Date every row you fill. Undated rows revert to `Unknown`.
+

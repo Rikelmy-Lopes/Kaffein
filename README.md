@@ -10,21 +10,23 @@ implementation.
 | **GUI framework** | egui |
 | **Target development language** | Java |
 | **Reference product** | IntelliJ IDEA — UX reference only, clean-room |
-| **Repository contents** | documentation only (see [Repository scope](#repository-scope)) |
-| **Project status** | pre-implementation — see [`ROADMAP.md`](ROADMAP.md) |
+| **Repository contents** | Rust workspace and documentation (see [Repository scope](#repository-scope)) |
+| **Project status** | foundation shell — `Implemented`, not verified; see [`ROADMAP.md`](ROADMAP.md) |
 
 ---
 
 ## Repository scope
 
-This repository holds the **documentation** for the IDE: architecture, development workflow, design
-system, contribution rules, threat model, and roadmap. It does not contain the Rust sources, and
-nothing written here has been verified against a running build unless the text says so.
+This repository holds the **Rust workspace** and the **documentation** for the IDE. The workspace
+currently contains a foundation shell: a window, menu/toolbar, project tree, editor tabs, a plain-text
+editor, bottom tool window tabs, a status bar, design tokens, and a command registry with dispatch
+and undo. Everything documented elsewhere remains design intent until a test, a launch trace, or a
+dated measurement demonstrates it.
 
-That constraint shapes every document:
+The status rules still apply:
 
-- Claims about code, crates, commands, and toolchains are marked **`Unknown`** or **`Proposed`**
-  until someone verifies them against the real repository.
+- Claims about code, crates, commands, and toolchains carry a status; anything not demonstrated is
+  marked **`Unknown`** or **`Proposed`**.
 - Nothing is described as implemented because a control, table, or section exists here.
 - Placeholders are explicit and carry the verification procedure that will retire them.
 
@@ -118,14 +120,8 @@ complete. Each has exactly one destination; do not invent values to fill them.
 
 | Unknown | Where it will be recorded | How to establish it |
 |---|---|---|
-| Workspace layout and crate names | [`docs/architecture.md`](docs/architecture.md) › Crate map | `cargo metadata --no-deps --format-version 1` |
-| Dependency edges between crates | [`docs/architecture.md`](docs/architecture.md) › Crate map | `cargo tree --depth 1` per package |
-| Ownership of document state and undo | [`docs/architecture.md`](docs/architecture.md) › Document model | read the engine crate; write a state-transition test |
 | Supported platforms and CI gates | [`docs/development.md`](docs/development.md) › Verified facts | CI configuration and release workflow |
-| Toolchain/MSRV | [`docs/development.md`](docs/development.md) › Verified facts | `rust-toolchain.toml` or `Cargo.toml` |
 | Automation entry points | [`docs/development.md`](docs/development.md) › Drive the app programmatically | search for a CLI, control channel, or test harness |
-| Design tokens in code | [`docs/ui-design.md`](docs/ui-design.md) › Design tokens | locate the theme module |
-| Licence and third-party attribution | [`docs/contributing.md`](docs/contributing.md) › Licensing and attribution | repository root licence files |
 | Parity target version | [`docs/parity-method.md`](docs/parity-method.md) › Scope | explicit maintainer decision recorded in the scope block |
 
 ## Contributing in one minute

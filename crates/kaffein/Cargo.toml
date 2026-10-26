@@ -1,0 +1,20 @@
+[package]
+name = "kaffein"
+description = "Kaffein — a Java IDE implemented in Rust with egui"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[[bin]]
+name = "kaffein"
+path = "src/main.rs"
+
+[dependencies]
+kaffein-app.workspace = true
+kaffein-infra.workspace = true
+kaffein-ui.workspace = true
+
+eframe.workspace = true
+egui.workspace = true

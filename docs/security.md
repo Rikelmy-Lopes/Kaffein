@@ -1,8 +1,8 @@
 # Security
 
-> **Document state:** threat model and control requirements, not implementation status. No control
-> listed here is verified as implemented. Each row carries a status from the vocabulary in
-> [`README.md`](../README.md), and nothing may be marked `Verified` without a test or an audit note.
+> **Document state:** threat model and control requirements. Controls marked `Partial` have a
+> foundation implementation in the workspace, but none has been independently audited or tested as a
+> security control, so no row is `Verified`.
 
 An IDE is an unusually privileged application. It opens files it did not author, parses them with
 hand-written code, spawns compilers and build tools, and holds the user's source code, environment,
@@ -54,8 +54,8 @@ flowchart LR
 | T-01 | Arbitrary code execution via project build logic | A cloned repository's build script runs on open | Full user compromise | Never build on open; explicit "trust this project" consent; show the command that will run | `Proposed` |
 | T-02 | Malicious build plugins or annotation processors | A dependency executes at configuration time | Full user compromise | Consent covers dependency resolution; pin/verify where possible; make the network step visible | `Proposed` |
 | T-03 | Path traversal / archive slip | A jar or source archive entry named `../../.ssh/authorized_keys` | File overwrite | Canonicalise and confine every extracted path to the destination root | `Proposed` |
-| T-04 | Symlink and junction escape | A project symlink pointing outside the workspace | Write outside the project | Resolve links before writing; never follow links out of the workspace silently | `Proposed` |
-| T-05 | Resource exhaustion | Deeply nested generics, a 2 GB single-line file, zip bombs | Freeze or OOM | Input size/depth limits, streaming parse, cancellable indexing, per-file budget | `Proposed` |
+| T-04 | Symlink and junction escape | A project symlink pointing outside the workspace | Write outside the project | Resolve links before writing; never follow links out of the workspace silently. Foundation: the project scanner skips symlinks (`crates/kaffein-infra/src/project_loader.rs`); explicitly opened file paths are still followed | `Partial` |
+| T-05 | Resource exhaustion | Deeply nested generics, a 2 GB single-line file, zip bombs | Freeze or OOM | Input size/depth limits, streaming parse, cancellable indexing, per-file budget. Foundation: 8 MiB file cap (`filesystem.rs`), scan depth 8 and 500 entries per directory (`project_loader.rs`) | `Partial` |
 | T-06 | Parser memory-safety defect | Malformed source triggering a panic or worse | Crash, potential corruption | Safe Rust, fuzz targets for every parser, no `unsafe` parsing, panic-free error paths | `Proposed` |
 | T-07 | Terminal escape injection | Build output containing OSC sequences that rewrite the window title or paste clipboard content | UI spoofing, clipboard hijack | Strip or neutralise control sequences before rendering | `Proposed` |
 | T-08 | Secret leakage in logs | A stack trace containing a token from the environment | Credential theft | Redact known secret patterns; deny-list environment dumps; log at boundaries only | `Proposed` |

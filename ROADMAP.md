@@ -6,9 +6,10 @@
 
 ## Current stage
 
-**Stage: Foundation, not yet verified.** The repository contains documentation only; no build,
-command, or workflow has been observed. Until the first measurement is recorded, the honest status
-of every dimension below is `Unknown`.
+**Stage: Foundation — shell implemented, gate not verified.** The workspace launches a desktop shell
+on Windows, the command registry is the only action path for the controls it exposes, and the
+foundation tests pass. The Foundation exit gate is still open: there is no CI, no layout persistence,
+and no visual or contrast verification against a running build.
 
 Stage names are defined by their exit gates, not by effort spent.
 
@@ -49,11 +50,11 @@ Status uses the vocabulary in [`README.md`](README.md): `Verified`, `Implemented
 
 | Dimension | Status | Evidence level | Evidence / next milestone |
 |---|---|---|---|
-| Application shell and window management | `Unknown` | `E0` | Milestone M0: window, panels, layout persistence |
-| Command registry, dispatch, and undo | `Unknown` | `E0` | M0: one registry, one dispatch path, undo stack with tests |
-| File/project explorer | `Unknown` | `E0` | M1: tree, filtering, file operations as commands |
-| Editor and document lifecycle | `Unknown` | `E0` | M1: open/edit/undo/save/reload/external change |
-| Tabs, split views, tool windows | `Unknown` | `E0` | M1: shares one document and one undo stack |
+| Application shell and window management | `Partial` | `E1` | `crates/kaffein/src/main.rs`; window `Kaffein` launched 2026-10-26. Gap: layout persistence and narrow-window checks |
+| Command registry, dispatch, and undo | `Implemented` | `E3` | `workspace::tests::undo_and_redo_dispatch_through_the_document`, `file_open_without_a_path_is_an_internal_error`; `cargo test --workspace` 2026-10-26 |
+| File/project explorer | `Partial` | `E2` | `project_loader::tests::scans_directories_first_and_skips_ignored_folders`, `workspace::tests::opening_a_project_builds_the_tree`. Gap: no filtering or file operations |
+| Editor and document lifecycle | `Partial` | `E3` | `creating_a_file_adds_a_dirty_document_without_writing`, `editing_then_saving_writes_the_document_and_clears_dirty_state`, `closing_a_dirty_document_is_refused`. Gap: reload, external change, discard flow |
+| Tabs, split views, tool windows | `Partial` | `E2` | `workspace::tests::activating_an_open_document_switches_the_active_tab`; `draw_tabs`. Gap: split views; bottom tool tabs are placeholders |
 | Search and navigation | `Unknown` | `E0` | M2: project-wide search, go to declaration |
 | Java/JDK discovery and configuration | `Unknown` | `E0` | M2: discovery order recorded, version mismatch diagnosed |
 | Build and compilation workflows | `Unknown` | `E0` | M2: one build system, diagnostics mapped to files |
@@ -62,8 +63,8 @@ Status uses the vocabulary in [`README.md`](README.md): `Verified`, `Implemented
 | Testing workflows | `Unknown` | `E0` | M3: discover, run, and report JUnit tests |
 | Refactoring and code intelligence | `Unknown` | `E0` | M3: at least rename with preview and undo |
 | Version control integration | `Unknown` | `E0` | M3: status, diff, commit as commands |
-| Themes and visual polish | `Proposed` | `E0` | [`docs/ui-design.md`](docs/ui-design.md) baseline; tokens not yet in code |
-| Keyboard and accessibility | `Proposed` | `E0` | Every action reachable keyboard-only; focus ring verified |
+| Themes and visual polish | `Partial` | `E1` | `crates/kaffein-ui/src/theme.rs`; `view.toggle_theme` command. Gap: contrast and screenshots not re-measured |
+| Keyboard and accessibility | `Partial` | `E1` | `crates/kaffein-app/src/registry.rs` shortcut table (`Ctrl+N/O/S/Z/Y/Q`) dispatches commands. Gap: no palette, focus ring and scale factors unverified |
 | Performance and reliability | `Unknown` | `E0` | Budgeted scenarios defined and measured in [`docs/development.md`](docs/development.md) |
 | Settings, persistence, extensibility | `Unknown` | `E0` | Settings schema, migration, and a decision on plugins |
 | Security posture | `Proposed` | `E0` | [`docs/security.md`](docs/security.md) controls implemented and audited |
@@ -131,17 +132,18 @@ Decisions that change scope or constraints. Append-only; superseded entries stay
 ## What's next
 
 Ordered by dependency. Each item names the artefact that closes it, so "done" is not a judgement
-call.
+call. The 2026-10-26 foundation shell turned items 1–4 from design into implementation; they stay
+listed because their verification is still missing.
 
-1. **Record the workspace facts.** Crate map, toolchain, CI gates, automation entry points — fill the
-   `Verified facts` table in [`docs/development.md`](docs/development.md). *Closed by:* dated rows with
-   evidence.
-2. **Prove the command model.** One command, reachable from menu, palette, shortcut, and test, with
-   undo. *Closed by:* a command test and the registry entry in [`docs/architecture.md`](docs/architecture.md).
-3. **Close the document lifecycle.** Open → edit → undo → save → external change. *Closed by:* a
-   lifecycle test and the filled Document model table.
-4. **Pin the design tokens.** Replace the proposed baseline in [`docs/ui-design.md`](docs/ui-design.md) with
-   values from the theme module. *Closed by:* the module path recorded in that document.
+1. **Verify the recorded workspace facts in CI.** Run format, lint, and tests on a platform matrix.
+   *Closed by:* dated CI job output and updated rows in [`docs/development.md`](docs/development.md).
+2. **Extend the command model.** Add the command palette and automation entry point over the existing
+   registry; no second dispatch path. *Closed by:* a command test plus palette and headless entry
+   points using `Workspace::dispatch`.
+3. **Close the document lifecycle.** Reload, external-change detection, and an explicit discard flow
+   for dirty documents. *Closed by:* lifecycle tests and the updated Document model table.
+4. **Re-measure the design tokens.** Capture both themes at 100/125/150% and re-check contrast.
+   *Closed by:* linked screenshots and dated contrast results in [`docs/ui-design.md`](docs/ui-design.md).
 5. **Define the parity scope.** Reference product version, capability areas, three workflows.
    *Closed by:* a scope block and a measurement entry in [`docs/parity-method.md`](docs/parity-method.md).
 6. **Implement the first security controls.** Project trust consent and automation hardening.
@@ -149,7 +151,8 @@ call.
 7. **Verify the M0 gate.** Run the Foundation exit criteria against a real build. *Closed by:* dated
    evidence rows for each criterion and `M0` recorded as verified in this file.
 
-**Last assessed:** 2026-10-26 (documentation audit; no implementation observed).
+**Last assessed:** 2026-10-26 (foundation shell launched and tests run on Windows; CI and visual
+verification remain outstanding).
 
 ## Revision history
 
@@ -157,3 +160,6 @@ call.
 |---|---|---|
 | 2026-10-26 | Roadmap rebuilt around stage gates, three numbers, evidence levels, decision log | documentation audit |
 | 2026-10-26 | "Headline numbers" label corrected (Stage is an assessment, not a measured number); Foundation gate now requires tokens implemented in code; next-step 7 replaced with a verifiable gate check | documentation audit |
+| 2026-10-26 | Foundation shell implemented: five-crate workspace, command registry/dispatch/undo, editor with tabs, project tree, design tokens, and status bar. Stage remains Foundation, not verified | `cargo test --workspace` (35 passed) and `kaffein.exe` launch on Windows; see [`docs/development.md`](docs/development.md) › Verified facts |
+| 2026-10-26 | Added `file.new` (`Ctrl+N`): a new document is created in memory, stays dirty until its first save, and is refused when the path already exists | `workspace::tests::creating_a_file_adds_a_dirty_document_without_writing`, `saving_a_new_document_writes_it_and_clears_dirty_state`, `creating_a_file_that_already_exists_is_refused` |
+

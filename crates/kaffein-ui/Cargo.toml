@@ -1,0 +1,13 @@
+[package]
+name = "kaffein-ui"
+description = "egui views, layout, and design tokens for the Kaffein IDE"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+kaffein-app.workspace = true
+kaffein-domain.workspace = true
+egui.workspace = true

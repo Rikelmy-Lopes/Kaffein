@@ -1,8 +1,9 @@
 # UI Design
 
-> **Document state:** design contract, not implementation status. The token values below are a
-> **proposed baseline**, not values read from the code. Once the theme module exists, that module
-> becomes the source of truth and this table mirrors it (see [Design tokens](#design-tokens)).
+> **Document state:** design contract. The token values are implemented in
+> `crates/kaffein-ui/src/theme.rs` (2026-10-26) and this table mirrors them. Layout and component
+> requirements remain design intent; no visual or contrast check has been re-run against the
+> running build.
 
 ## Design intent
 
@@ -119,16 +120,17 @@ Rules:
 - Syntax highlighting tokens are separate from chrome tokens so editor themes can change
   independently.
 
-Every token value in this section is `Proposed`: the theme module is still the missing artefact.
-When it exists, this table mirrors it and each row gains a source path.
+The theme module is the source of truth: `crates/kaffein-ui/src/theme.rs`. The dark and light
+columns above are mirrored from it on 2026-10-26; the values are `Implemented`, not `Verified`.
+The `view.toggle_theme` command switches between the two sets at runtime.
 
-Contrast of these baseline values was computed on 2026-10-26 with the WCAG 2.1 relative-luminance
-formula. Every foreground token (`text_primary`, `text_muted`, `selection_text`, `accent`, `error`,
+Contrast of these values was computed on 2026-10-26 with the WCAG 2.1 relative-luminance formula.
+Every foreground token (`text_primary`, `text_muted`, `selection_text`, `accent`, `error`,
 `warning`, `success`, `info`) reaches at least 4.5:1 against `surface_editor`, `surface_panel`,
 `surface_raised`, and `surface_sunken` in both themes. `text_disabled` is exempt as an inactive
 control. `border` and `border_subtle` are decorative separators; `border_strong` is the token for
 essential boundaries (splitter handles, input outlines) and reaches at least 3:1. Re-measure against
-the shipped theme module before marking any row `Verified`.
+a captured frame from the shipped theme module before marking any row `Verified`.
 
 Baseline revised on 2026-10-26 to meet that target: `accent`, `error`, `success`, `warning`, and the
 light `text_muted` changed values; `selection_text` became a foreground token, `selection_editor`
@@ -269,8 +271,8 @@ Do not imitate a feature visually if the underlying behaviour is not implemented
 
 ## Verification
 
-1. Locate the theme module and replace the **proposed baseline** column values with the real ones;
-   add the file path to this document.
+1. The theme module is `crates/kaffein-ui/src/theme.rs`; its values were mirrored into this document
+   on 2026-10-26. Continue with steps 2–6 before marking the visual design `Verified`.
 2. Inventory widgets against the Component table; list missing components and missing states.
 3. Re-measure contrast for each text/background pairing in both themes against the shipped values
    and record failing pairs; the baseline was computed on 2026-10-26 (see [Design tokens](#design-tokens)).

@@ -79,6 +79,18 @@ note. Fonts, icons, themes, and sample projects are the usual offenders. If a li
 recorded, the contribution cannot be accepted — an unlicensed asset is a legal defect, not a
 documentation gap.
 
+| Item | Licence | Evidence | Status |
+|---|---|---|---|
+| Project | GPL-3.0-only | [`LICENSE`](../LICENSE); `[workspace.package] license` in [`Cargo.toml`](../Cargo.toml) | `Verified` (2026-10-26) |
+| `egui` / `eframe` 0.29.1 | MIT OR Apache-2.0 | `cargo metadata --format-version 1` | `Verified` (2026-10-26) |
+| `epaint_default_fonts` 0.29.1 (bundled UI fonts) | (MIT OR Apache-2.0) AND OFL-1.1 AND LicenseRef-UFL-1.0 | `cargo metadata`; used unmodified through `eframe`'s `default_fonts` feature | `Verified` (2026-10-26) |
+| `glow` 0.14.2 | MIT OR Apache-2.0 OR Zlib | `cargo metadata` | `Verified` (2026-10-26) |
+| `winit` 0.30.13 | Apache-2.0 | `cargo metadata` | `Verified` (2026-10-26) |
+
+No IntelliJ icons, fonts, layouts, translations, or source files are vendored. The complete
+transitive licence set is available from `cargo metadata --format-version 1`; re-run it when a
+dependency is added and update this table.
+
 ## Checklist: adding a command
 
 1. **Inspect existing patterns.** Find similar commands, the registry entry shape, result types,

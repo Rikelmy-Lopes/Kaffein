@@ -1,9 +1,8 @@
 # Architecture
 
-> **Document state:** design contract, not implementation status. Crate names, module paths, and
-> the concrete ownership model are `Unknown` until verified against the workspace. Sections that
-> describe required behaviour are binding; the tables that describe the current implementation must
-> be filled from the repository, not from this document.
+> **Document state:** design contract. The crate map, command executor, and current document model
+> were recorded from the workspace on 2026-10-26; the requirements below remain binding. Anything
+> not filled from the repository stays `Unknown`.
 
 ## Goals
 
@@ -83,7 +82,11 @@ topological order, with the evidence that the row is accurate.
 
 | Crate / package | Responsibility | Depends on | Status | Evidence |
 |---|---|---|---|---|
-| `TBD` | `TBD` | `TBD` | `Unknown` | `Unknown` |
+| `kaffein-domain` | Documents, project tree data, and the ports infrastructure implements | standard library only | `Implemented` | `crates/kaffein-domain/src/lib.rs`; `cargo tree --depth 1 -p kaffein-domain` (2026-10-26) |
+| `kaffein-app` | Command registry, single dispatch path, application state, undo orchestration | `kaffein-domain` | `Implemented` | `crates/kaffein-app/src/registry.rs`, `workspace.rs`; `cargo tree --depth 1 -p kaffein-app` |
+| `kaffein-infra` | Filesystem adapter (UTF-8, size limit) and project scanner | `kaffein-domain` | `Implemented` | `crates/kaffein-infra/src/filesystem.rs`, `project_loader.rs` |
+| `kaffein-ui` | egui views, layout, design tokens; emits commands instead of mutating state | `kaffein-app`, `kaffein-domain`, `egui 0.29.1` | `Implemented` | `crates/kaffein-ui/src/lib.rs`, `theme.rs`; `cargo tree --depth 1 -p kaffein-ui` |
+| `kaffein` | Desktop binary; constructs infrastructure and wires it into the workspace | `kaffein-app`, `kaffein-infra`, `kaffein-ui`, `eframe`/`egui` | `Implemented` | `crates/kaffein/src/main.rs`; `cargo metadata --no-deps --format-version 1` |
 
 Update this table when crates are added, removed, or change responsibility. If a crate's
 responsibility cannot be stated in one sentence, that is an architecture signal, not a table
@@ -110,8 +113,22 @@ Required properties:
   with a reason, or be explicitly re-entrant. This must be a documented decision, not an accident.
 - **No egui types in domain APIs.** Colors, rectangles, and IDs from egui stop at the UI boundary.
 
-The precise command executor, state ownership model, and asynchronous execution mechanism must be
-documented from the actual code rather than assumed.
+The precise command executor, state ownership model, and asynchronous execution mechanism are
+recorded below as they exist in the workspace, not assumed.
+
+**Current executor (2026-10-26).** `CommandRegistry` owns one `Command` descriptor per action:
+identifier, title, category, menu placement, toolbar placement, shortcuts, argument kind, enablement
+predicate, optional checked predicate, and handler. `Workspace::dispatch` is the only dispatch path;
+it resolves the command, validates required path arguments, runs the handler against `AppState` and
+injected `Services`, and converts the `CommandOutcome` into a status message. Menus and the toolbar
+are generated from the registry, and keyboard shortcuts are matched from the same descriptors. The
+egui layer only collects `UiAction` values (command id plus arguments) and the binary dispatches
+them after the frame. Internal commands (`editor.replace_text`, `editor.activate`) use the same path
+without appearing in a menu.
+
+No asynchronous job executor exists yet: commands run on the UI thread and the only current work is
+in-memory editing plus bounded file/project reads. This meets the frame budget for the foundation
+shell but is not sufficient for compilation or indexing.
 
 ## Command model
 
@@ -165,15 +182,15 @@ implementation before filling in the details; each row needs a decision and evid
 
 | Topic | Requirement | Decision | Status | Evidence |
 |---|---|---|---|---|
-| Identity and file association | Each open document has a stable identity distinct from its path, so unsaved and renamed documents are representable | `TBD` | `Unknown` | `Unknown` |
-| In-memory representation | Text storage is explicit (buffer, rope, or sequence) and documented together with its indexing unit (byte vs char vs UTF-16) | `TBD` | `Unknown` | `Unknown` |
-| Open / create / save / reload / close | Each transition is a command, with defined ordering and failure behaviour | `TBD` | `Unknown` | `Unknown` |
-| Dirty state and save prompts | Modified state derives from saved content, not from a boolean toggled by widgets | `TBD` | `Unknown` | `Unknown` |
-| Encoding and line endings | Detected, preserved, and overrideable per document; conversion is explicit, never silent | `TBD` | `Unknown` | `Unknown` |
-| Undo / redo | Document-scoped history with grouping rules for typing and multi-step commands | `TBD` | `Unknown` | `Unknown` |
-| Multiple views of one document | Tabs and split views share one document and one undo stack | `TBD` | `Unknown` | `Unknown` |
-| External file changes | Detected change prompts a decision (reload, compare, ignore) without losing edits | `TBD` | `Unknown` | `Unknown` |
-| Thread safety | Which thread owns the document, and how background jobs read or propose edits | `TBD` | `Unknown` | `Unknown` |
+| Identity and file association | Each open document has a stable identity distinct from its path, so unsaved and renamed documents are representable | `DocumentId(u64)` allocated by `AppState`; the path is separate and currently always present | `Implemented` | `crates/kaffein-domain/src/document.rs`; `AppState::allocate_document_id` |
+| In-memory representation | Text storage is explicit (buffer, rope, or sequence) and documented together with its indexing unit (byte vs char vs UTF-16) | UTF-8 `String`, newlines normalised to `\n`. Undo diffing compares bytes; there is no incremental index yet | `Implemented` | `crates/kaffein-domain/src/document.rs`; `normalize_newlines`, `is_single_char_edit` |
+| Open / create / save / reload / close | Each transition is a command, with defined ordering and failure behaviour | New, open, save, and close are commands. Reload is not implemented. Closing a dirty document is refused rather than discarding edits | `Partial` | `file.new`, `file.open`, `file.save`, `file.close`; `workspace::tests::creating_a_file_adds_a_dirty_document_without_writing`; gap: reload, discard flow |
+| Dirty state and save prompts | Modified state derives from saved content, not from a boolean toggled by widgets | `buffer != saved_text`; `saved_text` is `None` until the first load or save, so a new document starts dirty. Saving replaces `saved_text` with the buffer | `Implemented` | `Document::is_dirty`, `mark_saved`, `Document::new`; `a_new_document_is_dirty_until_the_first_save` |
+| Encoding and line endings | Detected, preserved, and overrideable per document; conversion is explicit, never silent | UTF-8 only; invalid UTF-8 fails to open. CRLF/LF detected at load and restored on save; mixed endings and BOM are not surfaced | `Partial` | `crates/kaffein-infra/src/filesystem.rs`; `LineEnding::detect`; gap: encoding selection, mixed-ending diagnostic |
+| Undo / redo | Document-scoped history with grouping rules for typing and multi-step commands | Snapshot stack with 600 ms single-character coalescing; save keeps history; undo after edit clears redo | `Implemented` | `crates/kaffein-domain/src/document.rs`; `typing_within_the_window_coalesces_into_one_undo_step` |
+| Multiple views of one document | Tabs and split views share one document and one undo stack | One editor view per document; tabs switch the active document. Split views are not implemented | `Partial` | `crates/kaffein-ui/src/lib.rs` › `draw_tabs`; gap: split views |
+| External file changes | Detected change prompts a decision (reload, compare, ignore) without losing edits | Not detected | `Planned` | Roadmap M1 |
+| Thread safety | Which thread owns the document, and how background jobs read or propose edits | The UI thread owns all state; no background job reads documents yet | `Implemented` | `crates/kaffein/src/main.rs`; `Workspace` is not shared across threads |
 
 The UTF indexing unit deserves special attention: the JVM, Rust, and egui do not agree on string
 width. Choose one canonical unit, document it, and convert only at boundaries.
@@ -203,8 +220,8 @@ affected tables above.
 
 | Question | Why it matters | Status |
 |---|---|---|
-| Text buffer representation and canonical index unit | Affects every editing command, diagnostics mapping, and performance | `Unknown` |
-| Undo granularity and command grouping | Determines how "one user action" is defined across typing, refactors, and tools | `Unknown` |
+| Text buffer representation and canonical index unit | Affects every editing command, diagnostics mapping, and performance | `Partial` — UTF-8 `String` normalised to `\n`; no rope or incremental index yet (see [Document model](#document-model)) |
+| Undo granularity and command grouping | Determines how "one user action" is defined across typing, refactors, and tools | `Partial` — 600 ms single-character coalescing; grouping across commands is still open |
 | Indexing strategy (in-process vs long-lived worker) | Dictates memory model and how stale results are rejected | `Unknown` |
 | Build system integration depth (Gradle/Maven invocation vs native model) | Largest cost driver in the Java workflow stage | `Unknown` |
 | Automation surface (headless CLI, control channel, MCP) and its security model | Determines testability and agent support | `Unknown` |
@@ -212,14 +229,16 @@ affected tables above.
 
 ## Verification
 
-Retire the `Unknown` rows with these steps, in order:
+The crate map, command executor, and most Document model rows were recorded on 2026-10-26; steps
+1–4 below were executed for the foundation shell. Remainder:
 
 1. `cargo metadata --no-deps --format-version 1` → crate map (names, versions, targets).
 2. `cargo tree --depth 1 -p <package>` for each package → dependency edges; flag any upward or
    cyclic edge as a defect.
 3. Read the command registry → fill the registry metadata fields and confirm one dispatch path.
 4. Write a state-transition test for document open → edit → undo → save → external change; record
-   the observed model in the Document model table.
+   the observed model in the Document model table. The open/edit/undo/save half exists; reload and
+   external change are still gaps.
 5. Trace one external tool invocation end to end; record discovery order, environment, and
    cancellation behaviour.
 6. Date every row you fill. Undated rows remain `Unknown`.

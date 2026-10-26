@@ -1,0 +1,11 @@
+[package]
+name = "kaffein-infra"
+description = "Filesystem and project scanning for the Kaffein IDE"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+kaffein-domain.workspace = true
