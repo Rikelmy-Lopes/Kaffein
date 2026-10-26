@@ -83,14 +83,57 @@ topological order, with the evidence that the row is accurate.
 | Crate / package | Responsibility | Depends on | Status | Evidence |
 |---|---|---|---|---|
 | `kaffein-domain` | Documents, project tree data, and the ports infrastructure implements | standard library only | `Implemented` | `crates/kaffein-domain/src/lib.rs`; `cargo tree --depth 1 -p kaffein-domain` (2026-10-26) |
-| `kaffein-app` | Command registry, single dispatch path, application state, undo orchestration | `kaffein-domain` | `Implemented` | `crates/kaffein-app/src/registry.rs`, `workspace.rs`; `cargo tree --depth 1 -p kaffein-app` |
+| `kaffein-app` | Command registry, single dispatch path, application state, undo orchestration | `kaffein-domain` | `Implemented` | `crates/kaffein-app/src/registry/`, `workspace.rs`; `cargo tree --depth 1 -p kaffein-app` |
 | `kaffein-infra` | Filesystem adapter (UTF-8, size limit) and project scanner | `kaffein-domain` | `Implemented` | `crates/kaffein-infra/src/filesystem.rs`, `project_loader.rs` |
-| `kaffein-ui` | egui views, layout, design tokens; emits commands instead of mutating state | `kaffein-app`, `kaffein-domain`, `egui 0.29.1` | `Implemented` | `crates/kaffein-ui/src/lib.rs`, `theme.rs`; `cargo tree --depth 1 -p kaffein-ui` |
-| `kaffein` | Desktop binary; constructs infrastructure and wires it into the workspace | `kaffein-app`, `kaffein-infra`, `kaffein-ui`, `eframe`/`egui` | `Implemented` | `crates/kaffein/src/main.rs`; `cargo metadata --no-deps --format-version 1` |
+| `kaffein-ui` | egui views, layout, design tokens; emits commands instead of mutating state | `kaffein-app`, `kaffein-domain`, `egui 0.29.1` | `Implemented` | `crates/kaffein-ui/src/lib.rs`, `editor.rs`, `theme.rs`; `cargo tree --depth 1 -p kaffein-ui` |
+| `kaffein` | Desktop binary; constructs infrastructure and wires it into the workspace | `kaffein-app`, `kaffein-infra`, `kaffein-ui`, `eframe`/`egui` | `Implemented` | `crates/kaffein/src/main.rs`, `app.rs`; `cargo metadata --no-deps --format-version 1` |
 
 Update this table when crates are added, removed, or change responsibility. If a crate's
 responsibility cannot be stated in one sentence, that is an architecture signal, not a table
 formatting problem.
+
+### Module layout
+
+A crate is the coarse boundary; a module is the fine one. A reader must be able to predict where a
+piece of behaviour lives from its responsibility, and a reviewer must be able to read one file in
+one sitting. The layout below is a rule, not a preference.
+
+Rules:
+
+- **One module, one responsibility.** The module doc comment states it in one sentence. If the
+  sentence needs "and", it is two modules.
+- **One folder per area.** A crate with more than one concern keeps `src/lib.rs` (or `src/main.rs`)
+  for wiring and puts behaviour in `src/<area>.rs` or `src/<area>/`. `lib.rs` and `mod.rs` contain
+  declarations, re-exports, and the entry point — not feature logic.
+- **File budget.** A Rust source file stays at or below **300 lines**, tests included. A file that
+  approaches the budget is split along its responsibilities, not truncated at an arbitrary line.
+  Data tables such as `kaffein-ui/src/theme.rs` may approach the budget but still need a stated
+  reason.
+- **Tests live beside the code they prove.** Unit tests go in `src/<module>/tests.rs`, declared with
+  `#[cfg(test)] mod tests;`. When they outgrow the budget, they are split by behaviour under
+  `src/<module>/tests/`. Integration tests belong in `tests/` only when they need the crate's public
+  API alone.
+- **No dumping grounds.** A crate-level `utils.rs`, `helpers.rs`, or `misc.rs` is a defect: the
+  helper belongs to the module that owns the rule. The only current exception is
+  `kaffein-app/src/commands/helpers.rs`, which holds the argument and error shims shared by command
+  implementations.
+- **No hidden wiring.** Every module is declared exactly once, from its crate root or its owning
+  module. Do not compile code through `#[path]` tricks.
+
+Current layout, measured 2026-10-26 with the command in
+[`development.md`](development.md) › File budget check:
+
+| Crate | Modules | Largest file | Status |
+|---|---|---|---|
+| `kaffein-domain` | `document/` (model, `line_ending`, tests), `project.rs`, `ports.rs` | `document.rs` — 218 lines | `Implemented` |
+| `kaffein-app` | `command/` (`command_id`, `args`, `outcome`, `keys`, `placement`), `commands/` (`file`, `edit`, `project`, `view`, `app`, `helpers`), `registry/` (`catalog`, `enablers`), `state.rs`, `services.rs`, `paths.rs`, `workspace.rs` + `workspace/tests/` | `registry/catalog.rs` — 243 lines | `Implemented` |
+| `kaffein-infra` | `filesystem.rs`, `project_loader.rs`, `test_support.rs` | `project_loader.rs` — 123 lines | `Implemented` |
+| `kaffein-ui` | `lib.rs` (frame wiring), `actions.rs`, `editor.rs`, `menu.rs`, `toolbar.rs`, `status_bar.rs`, `project_panel.rs`, `bottom_panel.rs`, `path_prompt.rs`, `ui_state.rs`, `theme.rs`, `tests.rs` | `theme.rs` — 233 lines | `Implemented` |
+| `kaffein` | `main.rs` (entry point), `app.rs` (eframe adapter) | `app.rs` — 53 lines | `Implemented` |
+
+Update this table when a module moves, a file crosses the budget, or a crate gains an area. The line
+counts are evidence for the budget, not a target to grow into. Module names resolve under
+`crates/<crate>/src/`.
 
 ## The engine/UI seam
 
@@ -184,13 +227,13 @@ implementation before filling in the details; each row needs a decision and evid
 |---|---|---|---|---|
 | Identity and file association | Each open document has a stable identity distinct from its path, so unsaved and renamed documents are representable | `DocumentId(u64)` allocated by `AppState`; the path is separate and currently always present | `Implemented` | `crates/kaffein-domain/src/document.rs`; `AppState::allocate_document_id` |
 | In-memory representation | Text storage is explicit (buffer, rope, or sequence) and documented together with its indexing unit (byte vs char vs UTF-16) | UTF-8 `String`, newlines normalised to `\n`. Undo diffing compares bytes; there is no incremental index yet | `Implemented` | `crates/kaffein-domain/src/document.rs`; `normalize_newlines`, `is_single_char_edit` |
-| Open / create / save / reload / close | Each transition is a command, with defined ordering and failure behaviour | New, open, save, and close are commands. Reload is not implemented. Closing a dirty document is refused rather than discarding edits | `Partial` | `file.new`, `file.open`, `file.save`, `file.close`; `workspace::tests::creating_a_file_adds_a_dirty_document_without_writing`; gap: reload, discard flow |
+| Open / create / save / reload / close | Each transition is a command, with defined ordering and failure behaviour | New, open, save, and close are commands. Reload is not implemented. Closing a dirty document is refused rather than discarding edits | `Partial` | `file.new`, `file.open`, `file.save`, `file.close`; `workspace::tests::file_open::creating_a_file_adds_a_dirty_document_without_writing`; gap: reload, discard flow |
 | Dirty state and save prompts | Modified state derives from saved content, not from a boolean toggled by widgets | `buffer != saved_text`; `saved_text` is `None` until the first load or save, so a new document starts dirty. Saving replaces `saved_text` with the buffer | `Implemented` | `Document::is_dirty`, `mark_saved`, `Document::new`; `a_new_document_is_dirty_until_the_first_save` |
 | Encoding and line endings | Detected, preserved, and overrideable per document; conversion is explicit, never silent | UTF-8 only; invalid UTF-8 fails to open. CRLF/LF detected at load and restored on save; mixed endings and BOM are not surfaced | `Partial` | `crates/kaffein-infra/src/filesystem.rs`; `LineEnding::detect`; gap: encoding selection, mixed-ending diagnostic |
 | Undo / redo | Document-scoped history with grouping rules for typing and multi-step commands | Snapshot stack with 600 ms single-character coalescing; save keeps history; undo after edit clears redo | `Implemented` | `crates/kaffein-domain/src/document.rs`; `typing_within_the_window_coalesces_into_one_undo_step` |
-| Multiple views of one document | Tabs and split views share one document and one undo stack | One editor view per document; tabs switch the active document. Split views are not implemented | `Partial` | `crates/kaffein-ui/src/lib.rs` › `draw_tabs`; gap: split views |
+| Multiple views of one document | Tabs and split views share one document and one undo stack | One editor view per document; tabs switch the active document. Split views are not implemented | `Partial` | `crates/kaffein-ui/src/editor.rs` › `draw_tabs`; gap: split views |
 | External file changes | Detected change prompts a decision (reload, compare, ignore) without losing edits | Not detected | `Planned` | Roadmap M1 |
-| Thread safety | Which thread owns the document, and how background jobs read or propose edits | The UI thread owns all state; no background job reads documents yet | `Implemented` | `crates/kaffein/src/main.rs`; `Workspace` is not shared across threads |
+| Thread safety | Which thread owns the document, and how background jobs read or propose edits | The UI thread owns all state; no background job reads documents yet | `Implemented` | `crates/kaffein/src/app.rs`; `Workspace` is not shared across threads |
 
 The UTF indexing unit deserves special attention: the JVM, Rust, and egui do not agree on string
 width. Choose one canonical unit, document it, and convert only at boundaries.
@@ -229,8 +272,8 @@ affected tables above.
 
 ## Verification
 
-The crate map, command executor, and most Document model rows were recorded on 2026-10-26; steps
-1–4 below were executed for the foundation shell. Remainder:
+The crate map, module layout, command executor, and most Document model rows were recorded on
+2026-10-26; steps 1–4 and 7 below were executed for the foundation shell. Remainder:
 
 1. `cargo metadata --no-deps --format-version 1` → crate map (names, versions, targets).
 2. `cargo tree --depth 1 -p <package>` for each package → dependency edges; flag any upward or
@@ -242,3 +285,5 @@ The crate map, command executor, and most Document model rows were recorded on 2
 5. Trace one external tool invocation end to end; record discovery order, environment, and
    cancellation behaviour.
 6. Date every row you fill. Undated rows remain `Unknown`.
+7. Re-run the file budget check in [`development.md`](development.md) › File budget check; update
+   the module-layout table if a file exceeds 300 lines or a module moved.

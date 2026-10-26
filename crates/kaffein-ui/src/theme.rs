@@ -3,6 +3,7 @@
 //! The code is the source of truth for values; the documentation mirrors it.
 
 use egui::{Color32, FontFamily, FontId, Margin, Rounding, Shadow, Stroke, TextStyle, Vec2};
+use kaffein_app::MessageSeverity;
 
 /// Spacing scale from the design document.
 pub const SPACE_1: f32 = 2.0;
@@ -205,6 +206,15 @@ impl Theme {
 
 fn rgb(red: u8, green: u8, blue: u8) -> Color32 {
     Color32::from_rgb(red, green, blue)
+}
+
+/// Severity colour for surfaces that render application messages.
+pub fn severity_color(theme: &Theme, severity: MessageSeverity) -> Color32 {
+    match severity {
+        MessageSeverity::Info => theme.info,
+        MessageSeverity::Warning => theme.warning,
+        MessageSeverity::Error => theme.error,
+    }
 }
 
 #[cfg(test)]

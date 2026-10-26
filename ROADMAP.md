@@ -51,10 +51,10 @@ Status uses the vocabulary in [`README.md`](README.md): `Verified`, `Implemented
 | Dimension | Status | Evidence level | Evidence / next milestone |
 |---|---|---|---|
 | Application shell and window management | `Partial` | `E1` | `crates/kaffein/src/main.rs`; window `Kaffein` launched 2026-10-26. Gap: layout persistence and narrow-window checks |
-| Command registry, dispatch, and undo | `Implemented` | `E3` | `workspace::tests::undo_and_redo_dispatch_through_the_document`, `file_open_without_a_path_is_an_internal_error`; `cargo test --workspace` 2026-10-26 |
-| File/project explorer | `Partial` | `E2` | `project_loader::tests::scans_directories_first_and_skips_ignored_folders`, `workspace::tests::opening_a_project_builds_the_tree`. Gap: no filtering or file operations |
+| Command registry, dispatch, and undo | `Implemented` | `E3` | `workspace::tests::edit::undo_and_redo_dispatch_through_the_document`, `file_open_without_a_path_is_an_internal_error`; `cargo test --workspace` 2026-10-26 |
+| File/project explorer | `Partial` | `E2` | `project_loader::tests::scans_directories_first_and_skips_ignored_folders`, `workspace::tests::project::opening_a_project_builds_the_tree`. Gap: no filtering or file operations |
 | Editor and document lifecycle | `Partial` | `E3` | `creating_a_file_adds_a_dirty_document_without_writing`, `editing_then_saving_writes_the_document_and_clears_dirty_state`, `closing_a_dirty_document_is_refused`. Gap: reload, external change, discard flow |
-| Tabs, split views, tool windows | `Partial` | `E2` | `workspace::tests::activating_an_open_document_switches_the_active_tab`; `draw_tabs`. Gap: split views; bottom tool tabs are placeholders |
+| Tabs, split views, tool windows | `Partial` | `E2` | `workspace::tests::edit::activating_an_open_document_switches_the_active_tab`; `draw_tabs`. Gap: split views; bottom tool tabs are placeholders |
 | Search and navigation | `Unknown` | `E0` | M2: project-wide search, go to declaration |
 | Java/JDK discovery and configuration | `Unknown` | `E0` | M2: discovery order recorded, version mismatch diagnosed |
 | Build and compilation workflows | `Unknown` | `E0` | M2: one build system, diagnostics mapped to files |
@@ -64,7 +64,7 @@ Status uses the vocabulary in [`README.md`](README.md): `Verified`, `Implemented
 | Refactoring and code intelligence | `Unknown` | `E0` | M3: at least rename with preview and undo |
 | Version control integration | `Unknown` | `E0` | M3: status, diff, commit as commands |
 | Themes and visual polish | `Partial` | `E1` | `crates/kaffein-ui/src/theme.rs`; `view.toggle_theme` command. Gap: contrast and screenshots not re-measured |
-| Keyboard and accessibility | `Partial` | `E1` | `crates/kaffein-app/src/registry.rs` shortcut table (`Ctrl+N/O/S/Z/Y/Q`) dispatches commands. Gap: no palette, focus ring and scale factors unverified |
+| Keyboard and accessibility | `Partial` | `E1` | `crates/kaffein-app/src/registry/catalog.rs` shortcut table (`Ctrl+N/O/S/Z/Y/Q`) dispatches commands. Gap: no palette, focus ring and scale factors unverified |
 | Performance and reliability | `Unknown` | `E0` | Budgeted scenarios defined and measured in [`docs/development.md`](docs/development.md) |
 | Settings, persistence, extensibility | `Unknown` | `E0` | Settings schema, migration, and a decision on plugins |
 | Security posture | `Proposed` | `E0` | [`docs/security.md`](docs/security.md) controls implemented and audited |
@@ -162,4 +162,5 @@ verification remain outstanding).
 | 2026-10-26 | "Headline numbers" label corrected (Stage is an assessment, not a measured number); Foundation gate now requires tokens implemented in code; next-step 7 replaced with a verifiable gate check | documentation audit |
 | 2026-10-26 | Foundation shell implemented: five-crate workspace, command registry/dispatch/undo, editor with tabs, project tree, design tokens, and status bar. Stage remains Foundation, not verified | `cargo test --workspace` (35 passed) and `kaffein.exe` launch on Windows; see [`docs/development.md`](docs/development.md) › Verified facts |
 | 2026-10-26 | Added `file.new` (`Ctrl+N`): a new document is created in memory, stays dirty until its first save, and is refused when the path already exists | `workspace::tests::creating_a_file_adds_a_dirty_document_without_writing`, `saving_a_new_document_writes_it_and_clears_dirty_state`, `creating_a_file_that_already_exists_is_refused` |
+| 2026-10-26 | Split the workspace into modules by responsibility: `command/`, `commands/`, `registry/`, per-surface UI modules, and `tests/` folders. No behaviour change; every source file is under the 300-line budget | `cargo test --workspace` (39 passed); [`docs/architecture.md`](docs/architecture.md) › Module layout |
 

@@ -30,6 +30,9 @@ Read the document you are about to change, then its **Verification** section.
    fonts, layouts, or other proprietary assets.
 8. Treat undocumented repository details as unknown until verified. Update documentation with
    observed facts instead of inventing crate names, metrics, or implemented features.
+9. Split code by responsibility. One module per concern, one folder per area, and every source file
+   stays within the budget in [`docs/architecture.md`](docs/architecture.md) › Module layout. A file
+   that no longer fits is split, not appended to.
 
 ## How to write in this repository
 
@@ -59,6 +62,7 @@ Update the tables that your change invalidates:
 | If you changed… | Update |
 |---|---|
 | workspace layout, crates, dependency edges | [`docs/architecture.md`](docs/architecture.md) › Crate map, Dependency layers |
+| module layout, file split, or file-size budget | [`docs/architecture.md`](docs/architecture.md) › Module layout |
 | command model, result/error semantics, async execution | [`docs/architecture.md`](docs/architecture.md) › Command model, and the checklist in [`docs/contributing.md`](docs/contributing.md) |
 | document lifecycle, undo, encoding, external-file handling | [`docs/architecture.md`](docs/architecture.md) › Document model |
 | build/test/automation commands or toolchain | [`docs/development.md`](docs/development.md) |
@@ -78,6 +82,9 @@ applies to agent-authored changes unchanged; do not restate it here.
 - Do not invent crate names, metrics, command IDs, or platform support.
 - Do not add "temporary" side channels that bypass command dispatch.
 - Do not widen a layer's dependencies for convenience.
+- Do not grow a source file past the budget in [`docs/architecture.md`](docs/architecture.md) ›
+  Module layout; split it by responsibility instead.
+- Do not add `utils.rs`, `helpers.rs`, or `misc.rs` as a crate-level dumping ground.
 - Do not commit secrets, tokens, machine paths, or user data into docs or fixtures.
 - Do not mark a parity dimension `Verified` from a checklist of controls; see
   [`docs/parity-method.md`](docs/parity-method.md) › Evidence levels.
@@ -95,5 +102,6 @@ non-negotiable. These are product decisions, not implementation details.
 This file states process rules, not implementation facts, so it has no placeholders to retire. Keep
 it accurate by checking that its links still resolve and that it does not restate the sources it
 points at — [`README.md`](README.md) › Documentation conventions and Documentation map,
-[`docs/contributing.md`](docs/contributing.md) › Definition of done, and the **After writing** table
+[`docs/contributing.md`](docs/contributing.md) › Definition of done,
+[`docs/architecture.md`](docs/architecture.md) › Module layout, and the **After writing** table
 above. Re-read it whenever one of those sections changes.

@@ -41,6 +41,19 @@ convenience.
 - Do not introduce abstractions, dependencies, or modules without a concrete need.
 - Keep egui types out of domain APIs.
 
+### Code organisation
+
+- One module, one responsibility; one folder per feature area. Put the responsibility in the module
+  doc comment, not in the file name.
+- Keep every Rust source file within the 300-line budget in
+  [`architecture.md`](architecture.md) › Module layout, tests included. Split along
+  responsibilities; do not cut a file at an arbitrary line.
+- `lib.rs` and `mod.rs` wire modules and re-export. Behaviour lives in the module that owns it.
+- Unit tests live in `src/<module>/tests.rs`; split them into `src/<module>/tests/` by behaviour
+  when they outgrow the budget.
+- Do not create crate-level `utils.rs`, `helpers.rs`, or `misc.rs`. A helper belongs next to the
+  rule it supports.
+
 ### Undo, focus, and errors are not optional
 
 - A command that mutates a document registers undo, or documents why it cannot.
@@ -60,6 +73,8 @@ convenience.
 ### Style
 
 - Follow existing formatting, naming, and module conventions.
+- Keep files within the module layout and file budget in [`architecture.md`](architecture.md) ›
+  Module layout.
 - Prefer idiomatic Rust, clear names, small focused functions, and explicit error handling.
 - Avoid `unwrap()`/`expect()` on paths where failure is expected; a panic in a command is a defect.
 - Avoid unnecessary cloning in per-frame code paths.
@@ -101,7 +116,8 @@ dependency is added and update this table.
    layer; filesystem/process access in infrastructure.
 4. **Implement in Rust.** No behaviour hidden in a script, shell command, or build step.
 5. **Register it.** Add the identifier, title, category, default shortcut (if any), enablement
-   predicate, and argument schema to the single registry.
+   predicate, and argument schema to the single table in
+   `crates/kaffein-app/src/registry/catalog.rs`.
 6. **Wire every entry point.** Menu, context menu, toolbar, palette, keybinding — all dispatch the
    same command. Do not add per-widget implementations.
 7. **Handle outcomes.** Success, structured no-op, cancellation, and failure; surface each
@@ -165,6 +181,8 @@ of restating it.
 - [ ] Failure paths return structured errors and are surfaced in the UI.
 - [ ] Long-running work leaves the UI thread and can be cancelled.
 - [ ] Tests cover success, invalid input, and a meaningful failure path, at the appropriate level.
+- [ ] New or changed code follows the module layout and stays within the file budget in
+  [`architecture.md`](architecture.md) › Module layout.
 - [ ] The relevant documentation tables were updated and match the implementation.
 - [ ] Relevant checks were run; every check reported as run was actually run, and failures are
   quoted verbatim.
@@ -177,6 +195,8 @@ of restating it.
 - A second code path that performs the same action as an existing command.
 - A visible control with no behaviour behind it.
 - An abstraction introduced "for the future" with no current caller.
+- A source file that exceeds the file budget, or a crate-level `utils.rs`/`helpers.rs`/`misc.rs`
+  used as a dumping ground.
 - A parity claim without evidence, or a status word without a status.
 - Copied proprietary code, icons, fonts, or layouts.
 - A performance claim without a measurement protocol.

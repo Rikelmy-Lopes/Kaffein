@@ -52,6 +52,21 @@ cargo clippy --all-targets --all-features -- -D warnings
 Run the gates the project actually supports and report failures verbatim. A gate that cannot run on
 the current platform is recorded as not run, not as passing.
 
+### File budget check
+
+The module layout and the 300-line budget are rules in [`architecture.md`](architecture.md) ›
+Module layout. Measure the current files with:
+
+```powershell
+Get-ChildItem crates -Recurse -Filter *.rs |
+  ForEach-Object { [pscustomobject]@{ Lines = (Get-Content $_.FullName).Count; File = $_.FullName } } |
+  Sort-Object Lines -Descending |
+  Select-Object -First 10
+```
+
+The command reports; it is not a CI gate yet. A file above the budget is a review finding, and the
+measured layout is recorded in [`architecture.md`](architecture.md) › Module layout.
+
 ### Test taxonomy
 
 An IDE needs more than unit tests. Each level answers a different question; keep the expensive
@@ -198,12 +213,13 @@ is `Unknown` — do not guess.
 | Rust toolchain / MSRV | Pinned `1.98.1`; MSRV declared `1.85` but only `1.98.1` has built the workspace | `Partial` | `rust-toolchain.toml`, `[workspace.package] rust-version` | 2026-10-26 |
 | Supported operating systems | Windows (window launched); macOS and Linux unverified | `Partial` | `target\debug\kaffein.exe`, window title `Kaffein` | 2026-10-26 |
 | CI gates | None configured | `Unknown` | no `.github/workflows` or other CI configuration in the repository | 2026-10-26 |
-| Required environment variables | None | `Implemented` | `crates/kaffein/src/main.rs` constructs services without reading the environment; launch succeeded | 2026-10-26 |
+| Required environment variables | None | `Implemented` | `crates/kaffein/src/app.rs` constructs services without reading the environment; launch succeeded | 2026-10-26 |
 | Logging configuration | No subscriber or log file; command outcomes surface in the status bar | `Partial` | `kaffein_app::Workspace::record_outcome`; gap: persistent logs and `RUST_LOG` integration | 2026-10-26 |
 | Automation entry points | None | `Planned` | no CLI, socket listener, or control channel in the workspace | 2026-10-26 |
 | JDK discovery order | Not implemented | `Planned` | no JDK module in the workspace | 2026-10-26 |
 | GUI backend | `eframe 0.29.1` with `glow` and bundled default fonts | `Implemented` | `Cargo.toml`; `cargo tree --depth 1 -p kaffein` | 2026-10-26 |
 | Build, format, lint, test | `cargo check --workspace`, `cargo fmt --all -- --check`, `cargo clippy --all-targets --all-features -- -D warnings`, `cargo test --workspace` all passed; 39 tests | `Verified` | command output | 2026-10-26 |
+| Largest Rust source file | `crates/kaffein-app/src/registry/catalog.rs` — 243 lines; budget is 300 | `Verified` | [File budget check](#file-budget-check) | 2026-10-26 |
 | App launch smoke test | Debug binary stayed running for 6 s with window title `Kaffein` and empty stderr | `Verified` | `Start-Process .\target\debug\kaffein.exe` | 2026-10-26 |
 
 ## Verification
@@ -216,5 +232,7 @@ is `Unknown` — do not guess.
 5. Execute one budgeted performance scenario twice and store both results with hardware details.
 6. Choose a profiler, record the tool, version, and command, and attach one capture to a budgeted
    scenario; until then the Profiling table stays `Unknown`.
-7. Date every row you fill. Undated rows revert to `Unknown`.
+7. Re-run the [File budget check](#file-budget-check) after a module split and update the
+   module-layout table in [`architecture.md`](architecture.md).
+8. Date every row you fill. Undated rows revert to `Unknown`.
 

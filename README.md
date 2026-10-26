@@ -39,7 +39,7 @@ If you are looking for "what does this project actually do today", read
 |---|---|---|
 | [`README.md`](README.md) | What is this, how are these docs organised, how do I trust them? | everyone |
 | [`AGENTS.md`](AGENTS.md) | What are the non-negotiables, and where do I record what I learned? | AI agents, contributors |
-| [`docs/architecture.md`](docs/architecture.md) | How is the system layered, what is a command, what owns document state? | implementers, reviewers |
+| [`docs/architecture.md`](docs/architecture.md) | How is the system layered, how is the code split into modules, what is a command, what owns document state? | implementers, reviewers |
 | [`docs/development.md`](docs/development.md) | How do I build, test, run, drive, profile, and debug it? | implementers |
 | [`docs/contributing.md`](docs/contributing.md) | What makes a change acceptable, and what is the checklist? | contributors, reviewers |
 | [`docs/ui-design.md`](docs/ui-design.md) | What does the interface look like, and which tokens/widgets build it? | UI contributors, designers |
@@ -63,6 +63,9 @@ If you are looking for "what does this project actually do today", read
 7. **Documents state evidence, not intentions.** A status is worth what its evidence is worth.
 8. **Small, tested, reversible changes.** Big-bang rewrites and speculative abstractions are
    rejected by default.
+9. **Code is split by responsibility.** One module per concern, one folder per area, and every
+   source file stays within the budget in [`docs/architecture.md`](docs/architecture.md) ›
+   Module layout.
 
 ## Documentation conventions
 
@@ -94,7 +97,7 @@ Duplicated facts drift. Each fact lives in exactly one document and is linked el
 
 | Fact | Canonical home |
 |---|---|
-| Crate/module names and dependency edges | [`docs/architecture.md`](docs/architecture.md) |
+| Crate names, module layout, file-size budget, and dependency edges | [`docs/architecture.md`](docs/architecture.md) |
 | Commands, tests, toolchain, automation entry points | [`docs/development.md`](docs/development.md) |
 | Command and review conventions | [`docs/contributing.md`](docs/contributing.md) |
 | Tokens, typography, layout, widget rules | [`docs/ui-design.md`](docs/ui-design.md) |
