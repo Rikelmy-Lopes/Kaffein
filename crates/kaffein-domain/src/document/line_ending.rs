@@ -8,13 +8,6 @@ pub enum LineEnding {
 }
 
 impl LineEnding {
-    pub fn label(self) -> &'static str {
-        match self {
-            Self::Lf => "LF",
-            Self::Crlf => "CRLF",
-        }
-    }
-
     /// Detects the convention from raw file contents. A file containing any
     /// CRLF is treated as CRLF; mixed files are normalised to the dominant
     /// convention and the discrepancy is not surfaced yet.

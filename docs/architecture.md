@@ -58,10 +58,13 @@ Dependencies flow toward stable, lower-level abstractions. Cycles are defects, n
 
 | Layer | Responsibilities | May depend on | Must not contain |
 |---|---|---|---|
-| **UI** | egui views, panels, widgets, input mapping, presentation, focus | Application, Domain (read-only types) | File I/O, process spawning, undo logic, business rules |
-| **Application** | Command registry and dispatch, undo/redo stack, job scheduling, event routing | Domain, Infrastructure | egui types, widget layout, direct rendering |
+| **UI** | egui views, panels, widgets, input mapping, presentation, focus | Application, Domain (read-only types), i18n | File I/O, process spawning, undo logic, business rules |
+| **Application** | Command registry and dispatch, undo/redo stack, job scheduling, event routing | Domain, Infrastructure, i18n | egui types, widget layout, direct rendering |
 | **Domain** | Documents, project model, Java semantics, editing rules, validation | Nothing outward; it declares the ports that Infrastructure implements | egui types, filesystem or process access, global state, a dependency on Infrastructure |
-| **Infrastructure** | Filesystem, JDK discovery, compiler/build invocation, settings persistence, logging, OS integration | Domain (port traits and value types) | UI types, command dispatch, domain rules |
+| **Infrastructure** | Filesystem, JDK discovery, compiler/build invocation, settings persistence, logging, OS integration | Domain (port traits and value types), i18n | UI types, command dispatch, domain rules |
+
+`kaffein-i18n` is a shared text catalog, not a behavioural layer: it owns locale data and lookup, and
+has no application, domain, or UI logic.
 
 Rules that follow from the table:
 
@@ -83,10 +86,11 @@ topological order, with the evidence that the row is accurate.
 | Crate / package | Responsibility | Depends on | Status | Evidence |
 |---|---|---|---|---|
 | `kaffein-domain` | Documents, project tree data, and the ports infrastructure implements | standard library only | `Implemented` | `crates/kaffein-domain/src/lib.rs`; `cargo tree --depth 1 -p kaffein-domain` (2026-10-26) |
-| `kaffein-app` | Command registry, single dispatch path, application state, undo orchestration | `kaffein-domain` | `Implemented` | `crates/kaffein-app/src/registry/`, `workspace.rs`; `cargo tree --depth 1 -p kaffein-app` |
-| `kaffein-infra` | Filesystem adapter (UTF-8, size limit) and project scanner | `kaffein-domain` | `Implemented` | `crates/kaffein-infra/src/filesystem.rs`, `project_loader.rs` |
-| `kaffein-ui` | egui views, layout, design tokens; emits commands instead of mutating state | `kaffein-app`, `kaffein-domain`, `egui 0.29.1` | `Implemented` | `crates/kaffein-ui/src/lib.rs`, `editor.rs`, `theme.rs`; `cargo tree --depth 1 -p kaffein-ui` |
-| `kaffein` | Desktop binary; constructs infrastructure and wires it into the workspace | `kaffein-app`, `kaffein-infra`, `kaffein-ui`, `eframe`/`egui` | `Implemented` | `crates/kaffein/src/main.rs`, `app.rs`; `cargo metadata --no-deps --format-version 1` |
+| `kaffein-i18n` | Locale catalogs, deferred user-facing text, fallback, and culture-specific formatting | standard library, `serde_json 1.0.154` | `Implemented` | `crates/kaffein-i18n/src/`, `locales/`; `cargo tree --depth 1 -p kaffein-i18n` (2026-10-26) |
+| `kaffein-app` | Command registry, single dispatch path, application state, undo orchestration | `kaffein-domain`, `kaffein-i18n` | `Implemented` | `crates/kaffein-app/src/registry/`, `workspace.rs`; `cargo tree --depth 1 -p kaffein-app` (2026-10-26) |
+| `kaffein-infra` | Filesystem adapter (UTF-8, size limit), project scanner, and external locale storage | `kaffein-domain`, `kaffein-i18n`, `serde_json 1.0.154` | `Implemented` | `crates/kaffein-infra/src/filesystem.rs`, `project_loader.rs`, `locale_files.rs`; `cargo tree --depth 1 -p kaffein-infra` (2026-10-26) |
+| `kaffein-ui` | egui views, layout, design tokens; emits commands instead of mutating state | `kaffein-app`, `kaffein-domain`, `kaffein-i18n`, `egui 0.29.1` | `Implemented` | `crates/kaffein-ui/src/lib.rs`, `editor.rs`, `theme.rs`; `cargo tree --depth 1 -p kaffein-ui` (2026-10-26) |
+| `kaffein` | Desktop binary; constructs infrastructure and wires it into the workspace | `kaffein-app`, `kaffein-i18n`, `kaffein-infra`, `kaffein-ui`, `eframe`/`egui` | `Implemented` | `crates/kaffein/src/main.rs`, `app.rs`; `cargo metadata --no-deps --format-version 1` (2026-10-26) |
 
 Update this table when crates are added, removed, or change responsibility. If a crate's
 responsibility cannot be stated in one sentence, that is an architecture signal, not a table
@@ -126,10 +130,11 @@ Current layout, measured 2026-10-26 with the command in
 | Crate | Modules | Largest file | Status |
 |---|---|---|---|
 | `kaffein-domain` | `document/` (model, `line_ending`, tests), `project.rs`, `ports.rs` | `document.rs` — 218 lines | `Implemented` |
-| `kaffein-app` | `command/` (`command_id`, `args`, `outcome`, `keys`, `placement`), `commands/` (`file`, `edit`, `project`, `view`, `app`, `helpers`), `registry/` (`catalog`, `enablers`), `state.rs`, `services.rs`, `paths.rs`, `workspace.rs` + `workspace/tests/` | `registry/catalog.rs` — 243 lines | `Implemented` |
-| `kaffein-infra` | `filesystem.rs`, `project_loader.rs`, `test_support.rs` | `project_loader.rs` — 123 lines | `Implemented` |
-| `kaffein-ui` | `lib.rs` (frame wiring), `actions.rs`, `editor.rs`, `menu.rs`, `toolbar.rs`, `status_bar.rs`, `project_panel.rs`, `bottom_panel.rs`, `path_prompt.rs`, `ui_state.rs`, `theme.rs`, `tests.rs` | `theme.rs` — 233 lines | `Implemented` |
-| `kaffein` | `main.rs` (entry point), `app.rs` (eframe adapter) | `app.rs` — 53 lines | `Implemented` |
+| `kaffein-i18n` | `lib.rs` (wiring), `keys.rs` (stable key table), `locale.rs` (language tags), `catalog.rs` (JSON and metadata parsing), `localizer.rs` (active/fallback lookup, switching, formatting), `source.rs` (external catalog seam), `text.rs` (deferred text), `format.rs` (numbers and dates), `tests.rs`; `locales/en.json`, `locales/pt-BR.json` | `localizer.rs` - 253 lines | `Implemented` |
+| `kaffein-app` | `command/` (`command_id`, `args`, `outcome`, `keys`, `placement`), `commands/` (`file`, `edit`, `project`, `view`, `app`, `helpers`), `registry/` (`catalog`, `enablers`), `state.rs`, `services.rs`, `paths.rs`, `workspace.rs` + `workspace/tests/` | `registry/catalog.rs` - 258 lines | `Implemented` |
+| `kaffein-infra` | `filesystem.rs`, `project_loader.rs`, `locale_files.rs`, `test_support.rs` | `locale_files.rs` - 189 lines | `Implemented` |
+| `kaffein-ui` | `lib.rs` (frame wiring), `actions.rs`, `editor.rs`, `menu.rs`, `toolbar.rs`, `status_bar.rs`, `project_panel.rs`, `bottom_panel.rs`, `path_prompt.rs`, `ui_state.rs`, `theme.rs`, `tests.rs` | `theme.rs` - 233 lines | `Implemented` |
+| `kaffein` | `main.rs` (entry point), `app.rs` (eframe adapter) | `app.rs` - 82 lines | `Implemented` |
 
 Update this table when a module moves, a file crosses the budget, or a crate gains an area. The line
 counts are evidence for the budget, not a target to grow into. Module names resolve under
@@ -160,14 +165,16 @@ The precise command executor, state ownership model, and asynchronous execution 
 recorded below as they exist in the workspace, not assumed.
 
 **Current executor (2026-10-26).** `CommandRegistry` owns one `Command` descriptor per action:
-identifier, title, category, menu placement, toolbar placement, shortcuts, argument kind, enablement
-predicate, optional checked predicate, and handler. `Workspace::dispatch` is the only dispatch path;
-it resolves the command, validates required path arguments, runs the handler against `AppState` and
-injected `Services`, and converts the `CommandOutcome` into a status message. Menus and the toolbar
-are generated from the registry, and keyboard shortcuts are matched from the same descriptors. The
-egui layer only collects `UiAction` values (command id plus arguments) and the binary dispatches
-them after the frame. Internal commands (`editor.replace_text`, `editor.activate`) use the same path
-without appearing in a menu.
+identifier, title key, category key, menu placement, toolbar placement, shortcuts, argument kind,
+enablement predicate, optional checked predicate, and handler. `Workspace::dispatch` is the only
+dispatch path; it resolves the command, validates required path arguments, runs the handler against
+`AppState` and injected `Services` (including the `Localizer`), and stores the outcome. A
+`CommandOutcome` carries deferred `Text`, which the status bar resolves every frame, so switching
+locale also re-renders the message already on screen. Menus and the toolbar are generated from the
+registry, and keyboard shortcuts are matched from the same descriptors. The egui layer only collects
+`UiAction` values (command id plus arguments) and the binary dispatches them after the frame.
+Internal commands (`editor.replace_text`, `editor.activate`) and locale switching
+(`app.set_locale`) use the same path without appearing as ordinary menu entries.
 
 No asynchronous job executor exists yet: commands run on the UI thread and the only current work is
 in-memory editing plus bounded file/project reads. This meets the frame budget for the foundation
@@ -204,10 +211,40 @@ automation client can trigger* exists.
 
 - Errors carry a category (user input, unsupported state, tool failure, internal defect), a
   human-readable message, and an optional diagnostic with file/line/column.
-- User-facing text is separate from internal context, so it can be localised later without touching
-  domain code.
+- User-facing text is a deferred `Text` key with arguments, while internal context stays as values
+  and diagnostics. The UI resolves the key without domain code knowing which locale is active.
 - Panics are defects. A panic in a command must not take down the whole application; whether that is
   achieved by isolation or by eliminating panics is an open decision.
+
+### Localisation
+
+All user-facing copy is data, not source literals. The mechanism is `Implemented` on 2026-10-26:
+
+| Concern | Decision | Evidence |
+|---|---|---|
+| Catalog | Nested JSON at `crates/kaffein-i18n/locales/en.json` and `pt-BR.json`, flattened to dot-separated keys at startup. Each file carries a `meta` block with its display name, decimal/group separators, and date pattern | `kaffein_i18n::catalog`; `every_declared_key_resolves_in_every_bundled_locale` |
+| Key registry | Stable constants in `kaffein-i18n/src/keys.rs`; [`ALL`](../crates/kaffein-i18n/src/keys.rs) is the completeness test list. Plural families are prefixes (`<key>.one`, `<key>.other`) and are tested separately | same test; `plural_families_select_the_counted_form_and_format_the_number` |
+| Runtime | `Localizer` is built once by the binary from `FileLocaleSource::discover()` and injected through `Services`; UI frames receive `&Localizer` | `crates/kaffein/src/main.rs`, `crates/kaffein-app/src/services.rs`, `crates/kaffein-ui/src/lib.rs` |
+| Languages | A locale is `Locale { code, name }`, never an enum: embedded `en` and `pt-BR` ship, and `locales/<code>.json` adds a language without recompiling. `en` is the fallback when a catalog is missing | `kaffein_i18n::Locale`, `locales/` |
+| External catalogs | `FileLocaleSource` reads `locales/*.json`, rejects invalid codes and files over 256 KiB, ignores malformed JSON, and merges valid entries over the embedded catalog for the same code | `crates/kaffein-infra/src/locale_files.rs`; `external_catalogs_override_embedded_ones_and_broken_files_are_ignored`, `ignores_catalogs_over_the_size_cap` |
+| Persistence | The selected code is written to `settings.json` under `locale` while preserving other keys; `KAFFEIN_CONFIG_DIR` overrides the config root. A failed write leaves the previous locale active | `FileLocaleSource`; `switching_a_locale_persists_and_is_restored`, `a_persistence_failure_keeps_the_previous_locale` |
+| Switching | `app.set_locale` changes the active locale. The View menu lists every loaded locale and the status bar shows the active one; the change takes effect on the next frame without a restart | `command.app.set_locale.title`; `switching_locale_rerenders_text_captured_before_the_switch` |
+| Dynamic text | Catalog entries use `{name}` placeholders; `Localizer::render` substitutes values and selects `.one`/`.other` with `count == 1`. Numbers and dates use the active catalog's separators and date pattern. Plural selection is not full CLDR and date patterns support `YYYY`/`YY`/`MM`/`DD` only | `placeholders_are_replaced`, `numbers_and_dates_follow_the_catalog_metadata` |
+| Deferred text | Command results and status messages store `Text` (key plus arguments) and resolve it at render time, so a locale change also re-renders messages stored before the switch | `kaffein_i18n::Text`; `text_resolves_at_render_time_and_follows_a_locale_change` |
+| Missing keys | A key missing in the active locale falls back to `en`; missing in both is a defect that debug builds assert and release builds render as the key | `Localizer::lookup`, `Localizer::text` |
+
+Rules:
+
+- Command descriptors, menu titles, toolbar labels, tooltips, status messages, prompt copy, and
+  infrastructure error templates name keys; they never embed English text.
+- Domain types expose values and codes, not prose. The UI maps values such as `LineEnding` to keys.
+- A translated sentence is one catalog entry with placeholders, never concatenated fragments.
+- Adding a catalog entry means adding a key constant in the same change and updating every bundled
+  catalog; `keys::ALL` is the test that prevents an untranslated entry from shipping unnoticed.
+- A new language is a catalog file with valid `meta`, not a Rust match arm. Only code that genuinely
+  branches on locale semantics may read the locale code.
+- External catalogs are untrusted input: validate the language code, cap the file size, and ignore a
+  file that does not parse instead of failing startup.
 
 ### Asynchronous work
 
@@ -268,7 +305,7 @@ affected tables above.
 | Indexing strategy (in-process vs long-lived worker) | Dictates memory model and how stale results are rejected | `Unknown` |
 | Build system integration depth (Gradle/Maven invocation vs native model) | Largest cost driver in the Java workflow stage | `Unknown` |
 | Automation surface (headless CLI, control channel, MCP) and its security model | Determines testability and agent support | `Unknown` |
-| Localisation strategy for UI text | Retrofitting is expensive; see [`ui-design.md`](ui-design.md) | `Unknown` |
+| Localisation strategy for UI text | Retrofitting is expensive; see [Localisation](#localisation) and [`ui-design.md`](ui-design.md) | `Implemented` — dynamic locale codes, embedded `en`/`pt-BR`, external catalogs, deferred text, and persistence; evidence in the [Localisation](#localisation) table (2026-10-26). Gap: no native-speaker review of the Portuguese catalog; no shipped surface displays a formatted date; plural selection is one/other only and formatting does not implement the full CLDR rule set (month names, alternate grouping sizes, time zones) |
 
 ## Verification
 
@@ -287,3 +324,7 @@ The crate map, module layout, command executor, and most Document model rows wer
 6. Date every row you fill. Undated rows remain `Unknown`.
 7. Re-run the file budget check in [`development.md`](development.md) › File budget check; update
    the module-layout table if a file exceeds 300 lines or a module moved.
+8. Re-run `cargo test -p kaffein-i18n every_declared_key_resolves_in_every_bundled_locale` after
+   adding or renaming a candidate key; the catalog completeness test proves every key in
+   [`ALL`](../crates/kaffein-i18n/src/keys.rs) resolves in every bundled catalog (`en`, `pt-BR`).
+   Add a plural-family key to both catalogs before referencing it in a command or widget.

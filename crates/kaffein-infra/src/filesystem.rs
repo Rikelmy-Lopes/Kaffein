@@ -6,50 +6,42 @@ use kaffein_domain::{FileSystem, FsError};
 /// raising it requires streaming support and a measured memory budget.
 pub const MAX_FILE_BYTES: u64 = 8 * 1024 * 1024;
 
-#[derive(Debug, Default, Clone, Copy)]
+#[derive(Debug, Clone, Default)]
 pub struct StdFileSystem;
+
+impl StdFileSystem {
+    pub fn new() -> Self {
+        Self
+    }
+}
 
 impl FileSystem for StdFileSystem {
     fn canonicalize(&self, path: &Path) -> Result<PathBuf, FsError> {
-        std::fs::canonicalize(path)
-            .map_err(|error| FsError::new(format!("{}: {error}", path.display())))
+        std::fs::canonicalize(path).map_err(|error| FsError::io(path, &error))
     }
 
     fn read_text(&self, path: &Path) -> Result<String, FsError> {
-        let metadata = std::fs::metadata(path)
-            .map_err(|error| FsError::new(format!("{}: {error}", path.display())))?;
+        let metadata = std::fs::metadata(path).map_err(|error| FsError::io(path, &error))?;
         if !metadata.is_file() {
-            return Err(FsError::new(format!("{} is not a file", path.display())));
+            return Err(FsError::not_a_file(path));
         }
         if metadata.len() > MAX_FILE_BYTES {
-            return Err(FsError::new(format!(
-                "{} is {} bytes; the current limit is {} bytes",
-                path.display(),
+            return Err(FsError::file_too_large(
+                path,
                 metadata.len(),
-                MAX_FILE_BYTES
-            )));
+                MAX_FILE_BYTES,
+            ));
         }
 
-        let bytes = std::fs::read(path)
-            .map_err(|error| FsError::new(format!("{}: {error}", path.display())))?;
-        String::from_utf8(bytes).map_err(|_| {
-            FsError::new(format!(
-                "{} is not valid UTF-8; encoding conversion is not implemented",
-                path.display()
-            ))
-        })
+        let bytes = std::fs::read(path).map_err(|error| FsError::io(path, &error))?;
+        String::from_utf8(bytes).map_err(|_| FsError::invalid_utf8(path))
     }
 
     fn write_text(&self, path: &Path, text: &str) -> Result<(), FsError> {
         if text.len() as u64 > MAX_FILE_BYTES {
-            return Err(FsError::new(format!(
-                "{} would exceed the {} byte write limit",
-                path.display(),
-                MAX_FILE_BYTES
-            )));
+            return Err(FsError::write_too_large(path, MAX_FILE_BYTES));
         }
-        std::fs::write(path, text)
-            .map_err(|error| FsError::new(format!("{}: {error}", path.display())))
+        std::fs::write(path, text).map_err(|error| FsError::io(path, &error))
     }
 }
 
@@ -57,6 +49,7 @@ impl FileSystem for StdFileSystem {
 mod tests {
     use super::*;
     use crate::test_support::TempDir;
+    use kaffein_domain::FsErrorKind;
 
     #[test]
     fn writes_and_reads_utf8_text() {
@@ -77,7 +70,7 @@ mod tests {
 
         let error = fs.read_text(&path).expect_err("invalid UTF-8 must fail");
 
-        assert!(error.message().contains("UTF-8"));
+        assert_eq!(error.kind(), FsErrorKind::InvalidUtf8);
     }
 
     #[test]

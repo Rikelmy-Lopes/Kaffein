@@ -10,4 +10,5 @@ repository.workspace = true
 [dependencies]
 kaffein-app.workspace = true
 kaffein-domain.workspace = true
+kaffein-i18n.workspace = true
 egui.workspace = true

@@ -46,7 +46,7 @@ Five constraints drive most decisions:
 │                   │  Problems  │  Build  │  Terminal  │  Version Control      │ 26  tab strip
 │                   │  (content of the selected bottom tool window)             │ 160+ resizable
 ├───────────────────┴──────────────────────────────────────────────────────────┤
-│ main ↑2   ⚠ 0  ✖ 1   Java 21   Gradle 8.x   UTF-8   LF   indexing…           │ 24
+│ main ↑2   ⚠ 0  ✖ 1   Java 21   Gradle   UTF-8   LF   English   indexing…  │ 24
 └──────────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -157,11 +157,38 @@ Rules:
 - Monospace is for code, paths, and identifiers — not for prose or buttons.
 - Numeric columns (line numbers, counts) align to the right or use tabular figures.
 
+## Localisation
+
+Copy is data. Every menu title, toolbar label, tooltip, status message, prompt, and error string is
+looked up through the injected `Localizer`; widgets do not embed English text. The mechanism, key
+conventions, catalogue metadata, and file locations are documented in
+[`architecture.md`](architecture.md) › Localisation; this section fixes the visible behaviour.
+
+The **Language** selector is a submenu of **View**. It lists every loaded locale by its own name
+(`English`, `Português (Brasil)`), marks the active one, and dispatches `app.set_locale` with the
+locale code. The status bar shows the active locale name in its right-hand group. Selecting a language
+re-renders menus, panels, prompts, and the status message already on screen on the next frame; no
+restart is required.
+
+Rules:
+
+- Add a key constant and its entry in every bundled catalog in the same change; a widget may only
+  reference the key.
+- Keep a sentence in one catalog entry with `{name}` placeholders. Do not concatenate translated
+  fragments, because word order and grammar differ between languages.
+- File names, project names, paths, counts, and error details are values substituted into a
+  localised template, not translated text.
+- The bundled catalogs are `en` and `pt-BR`. A further language is a `locales/<code>.json` file with
+  a `meta` block, not a widget branch or a hard-coded selector list.
+- Locale names are written in the language itself and are never translated into the active UI
+  language.
+
 ## Components
 
 | Component | Anatomy | States to define | Rules |
 |---|---|---|---|
 | Menu bar | Top-level items, popup panels, shortcut hints, separators | open, hover, disabled | Every item maps to a command; shortcuts render from the registry |
+| Language selector | **View** submenu, locale names, active marker | open, hover, selected | Generated from the loaded catalogs; selecting a name dispatches `app.set_locale` |
 | Toolbar | Icon buttons, overflow chevron | default, hover, pressed, disabled, running | Icons only with tooltips that include the shortcut |
 | Project tree | Rows, chevrons, file icons, VCS status colour | selected, focused, modified, ignored, loading | Indentation 12 px per level; no horizontal scrolling above 3 levels |
 | Editor tabs | Title, dirty dot, close button, overflow | active, inactive, hover, dirty, error | Middle-click closes; drag reorders; unsaved tabs are visually distinct |
@@ -207,6 +234,8 @@ Rules:
 - **Errors are actionable.** Every error message names the command, the object, and the next step.
 - **Search is first-class.** A single palette for commands, files, and symbols; results grouped and
   keyboard-navigable.
+- **Locale changes are live.** Selecting a language re-renders every surface, including the status
+  message already on screen, without a restart.
 
 ## States
 
@@ -260,6 +289,10 @@ Do not imitate a feature visually if the underlying behaviour is not implemented
 ## Visual verification checklist
 
 - [ ] Shared tokens are used consistently; no new raw colours or sizes in widgets.
+- [ ] No user-facing English literal appears in widget code; every label, tooltip, and message
+      resolves through the localisation catalog.
+- [ ] Switching the language re-renders menus, prompts, and the current status message without a
+      restart.
 - [ ] Text and controls meet the contrast targets in both themes.
 - [ ] Keyboard focus is visible and reachable on every interactive element.
 - [ ] Menus, context menus, palette, and shortcuts trigger the same commands.
@@ -279,3 +312,6 @@ Do not imitate a feature visually if the underlying behaviour is not implemented
 4. Capture the layout at three window sizes and three scale factors; link the images.
 5. Walk one workflow keyboard-only and list every focus stop that is invisible or unreachable.
 6. Date the review. Until step 1 completes, every value here is `Proposed`.
+7. Launch with both bundled locales, switch language from **View › Language**, and confirm menus,
+   prompts, the status message, and the status bar locale name update without a restart; record the
+   date and platform.

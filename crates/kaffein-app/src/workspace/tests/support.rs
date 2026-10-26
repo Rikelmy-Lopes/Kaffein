@@ -5,6 +5,7 @@ use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
 
 use kaffein_domain::{FileSystem, FsError, ProjectEntry, ProjectLoader, ProjectTree};
+use kaffein_i18n::Localizer;
 
 use crate::command::{command_id, CommandArgs};
 use crate::services::Services;
@@ -28,7 +29,7 @@ impl FileSystem for FakeFs {
         if disk.files.contains_key(path) || disk.dirs.contains(path) {
             Ok(path.to_path_buf())
         } else {
-            Err(FsError::new(format!("{} does not exist", path.display())))
+            Err(FsError::other(path, "does not exist"))
         }
     }
 
@@ -39,7 +40,7 @@ impl FileSystem for FakeFs {
             .files
             .get(path)
             .cloned()
-            .ok_or_else(|| FsError::new(format!("{} is not a file", path.display())))
+            .ok_or_else(|| FsError::other(path, "is not a file"))
     }
 
     fn write_text(&self, path: &std::path::Path, text: &str) -> Result<(), FsError> {
@@ -58,10 +59,7 @@ impl ProjectLoader for FakeProjects {
     fn load(&self, root: &std::path::Path) -> Result<ProjectTree, FsError> {
         let disk = self.disk.lock().expect("fake disk");
         if !disk.dirs.contains(root) {
-            return Err(FsError::new(format!(
-                "{} is not a directory",
-                root.display()
-            )));
+            return Err(FsError::other(root, "is not a directory"));
         }
         let children = disk
             .files
@@ -84,7 +82,7 @@ pub(crate) fn workspace() -> (Workspace, Arc<Mutex<FakeDisk>>) {
     let disk = Arc::new(Mutex::new(FakeDisk::default()));
     let fs = FakeFs { disk: disk.clone() };
     let projects = FakeProjects { disk: disk.clone() };
-    let services = Services::new(Box::new(fs), Box::new(projects));
+    let services = Services::new(Box::new(fs), Box::new(projects), Localizer::english());
     (Workspace::new(services, ThemePreference::Dark), disk)
 }
 

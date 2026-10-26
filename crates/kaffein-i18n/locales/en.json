@@ -1,0 +1,232 @@
+{
+  "meta": {
+    "name": "English",
+    "decimal": ".",
+    "group": ",",
+    "date": "MM/DD/YYYY"
+  },
+  "app": {
+    "title": "Kaffein"
+  },
+  "common": {
+    "cancel": "Cancel",
+    "cancelled": "Cancelled"
+  },
+  "menu": {
+    "file": "File",
+    "edit": "Edit",
+    "view": "View",
+    "language": "Language"
+  },
+  "category": {
+    "project": "Project",
+    "file": "File",
+    "edit": "Edit",
+    "view": "View",
+    "application": "Application",
+    "editor": "Editor"
+  },
+  "command": {
+    "project": {
+      "open": {
+        "title": "Open Project…",
+        "toolbar": "Project"
+      }
+    },
+    "file": {
+      "new": {
+        "title": "New File…"
+      },
+      "open": {
+        "title": "Open File…",
+        "toolbar": "Open"
+      },
+      "save": {
+        "title": "Save",
+        "toolbar": "Save"
+      },
+      "close": {
+        "title": "Close File"
+      }
+    },
+    "edit": {
+      "undo": {
+        "title": "Undo",
+        "toolbar": "Undo"
+      },
+      "redo": {
+        "title": "Redo",
+        "toolbar": "Redo"
+      }
+    },
+    "view": {
+      "toggle_project": {
+        "title": "Project Panel"
+      },
+      "toggle_bottom": {
+        "title": "Bottom Panel"
+      },
+      "toggle_theme": {
+        "title": "Dark Theme"
+      }
+    },
+    "app": {
+      "quit": {
+        "title": "Quit"
+      },
+      "set_locale": {
+        "title": "Set Language"
+      }
+    },
+    "editor": {
+      "replace_text": {
+        "title": "Replace Document Text"
+      },
+      "activate": {
+        "title": "Activate Document"
+      }
+    }
+  },
+  "status": {
+    "no_project": "No project",
+    "line_count": {
+      "one": "{count} line",
+      "other": "{count} lines"
+    },
+    "encoding": {
+      "utf8": "UTF-8"
+    },
+    "line_ending": {
+      "lf": "LF",
+      "crlf": "CRLF"
+    },
+    "theme": {
+      "dark": "Dark",
+      "light": "Light"
+    }
+  },
+  "editor": {
+    "welcome": "No file open — use File › Open File…{shortcut} or open a project.",
+    "close_file": "Close file"
+  },
+  "project_panel": {
+    "header": "PROJECT",
+    "open": "Open…",
+    "open_tooltip": "Open a project folder",
+    "empty": "No project open",
+    "open_project": "Open Project…"
+  },
+  "bottom_panel": {
+    "tab": {
+      "problems": "Problems",
+      "build": "Build",
+      "console": "Console"
+    },
+    "empty": {
+      "problems": "No problems. Diagnostics appear once Java analysis is available.",
+      "build": "Build output will appear here once build integration is implemented.",
+      "console": "Process output will appear here once run integration is implemented."
+    }
+  },
+  "prompt": {
+    "directory": {
+      "label": "Project folder",
+      "hint": "Paste a folder path, for example C:\\work\\project",
+      "action": "Open Project"
+    },
+    "new_file": {
+      "label": "File path",
+      "hint": "Paste a new file path, for example C:\\work\\project\\src\\New.java",
+      "action": "Create File"
+    },
+    "file": {
+      "label": "File path",
+      "hint": "Paste a file path, for example C:\\work\\project\\src\\App.java",
+      "action": "Open File"
+    },
+    "error": {
+      "path_required": "Enter a path."
+    },
+    "default_new_file_name": "Untitled.java"
+  },
+  "keybinding": {
+    "ctrl": "Ctrl",
+    "shift": "Shift",
+    "alt": "Alt"
+  },
+  "error": {
+    "kind": {
+      "user_input": "invalid input",
+      "unsupported_state": "unsupported state",
+      "tool_failure": "tool failure",
+      "internal": "internal error"
+    }
+  },
+  "enablement": {
+    "no_document": "No document is open",
+    "nothing_to_undo": "Nothing to undo",
+    "nothing_to_redo": "Nothing to redo",
+    "unknown_command": "Unknown command"
+  },
+  "message": {
+    "workspace": {
+      "error": "{kind}: {message}",
+      "unregistered": "Command '{id}' is not registered",
+      "requires_path": "Command '{id}' requires a path argument"
+    },
+    "file": {
+      "enter_path": "Enter a file path.",
+      "enter_name": "Enter a file name, not a folder.",
+      "cannot_create": "Cannot create the file: {error}",
+      "exists": "{path} already exists. Open it instead.",
+      "created": "Created {name} (unsaved)",
+      "cannot_open": "Cannot open the file: {error}",
+      "switched": "Switched to {name}",
+      "cannot_read": "Cannot read the file: {error}",
+      "opened": "Opened {name}",
+      "no_document": "No document is open",
+      "no_changes": "No changes to save",
+      "cannot_save": "Cannot save the file: {error}",
+      "saved": "Saved {name}",
+      "document_gone": "Document is no longer open",
+      "unsaved_changes": "{name} has unsaved changes. Save it before closing.",
+      "closed": "Closed {name}"
+    },
+    "project": {
+      "enter_path": "Enter a project folder path.",
+      "cannot_open": "Cannot open the project: {error}",
+      "cannot_read": "Cannot read the project: {error}",
+      "opened": "Opened project {name}"
+    },
+    "edit": {
+      "no_document": "No document is open",
+      "nothing_to_undo": "Nothing to undo",
+      "nothing_to_redo": "Nothing to redo",
+      "replace_requires_text": "editor.replace_text requires text arguments",
+      "document_gone": "The document is no longer open",
+      "activate_requires_document": "editor.activate requires a document argument"
+    },
+    "view": {
+      "theme": "Theme: {theme}"
+    },
+    "app": {
+      "dirty_documents": {
+        "one": "{count} document has unsaved changes. Save it before quitting.",
+        "other": "{count} documents have unsaved changes. Save them before quitting."
+      },
+      "locale_changed": "Language: {language}",
+      "locale_unknown": "The language '{code}' is not available",
+      "locale_save_failed": "Could not save the language preference: {error}",
+      "locale_requires_code": "app.set_locale requires a language code"
+    },
+    "path_required": "This command requires a path argument"
+  },
+  "infra": {
+    "io": "{path}: {error}",
+    "not_a_file": "{path} is not a file",
+    "file_too_large": "{path} is {size} bytes; the current limit is {limit} bytes",
+    "invalid_utf8": "{path} is not valid UTF-8; encoding conversion is not implemented",
+    "write_too_large": "{path} would exceed the {limit} byte write limit",
+    "not_a_directory": "{path} is not a directory"
+  }
+}

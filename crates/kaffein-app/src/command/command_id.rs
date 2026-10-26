@@ -16,3 +16,4 @@ pub const VIEW_TOGGLE_PROJECT: &str = "view.toggle_project";
 pub const VIEW_TOGGLE_BOTTOM: &str = "view.toggle_bottom";
 pub const VIEW_TOGGLE_THEME: &str = "view.toggle_theme";
 pub const APP_QUIT: &str = "app.quit";
+pub const APP_SET_LOCALE: &str = "app.set_locale";

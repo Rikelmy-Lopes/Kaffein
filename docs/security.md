@@ -55,7 +55,7 @@ flowchart LR
 | T-02 | Malicious build plugins or annotation processors | A dependency executes at configuration time | Full user compromise | Consent covers dependency resolution; pin/verify where possible; make the network step visible | `Proposed` |
 | T-03 | Path traversal / archive slip | A jar or source archive entry named `../../.ssh/authorized_keys` | File overwrite | Canonicalise and confine every extracted path to the destination root | `Proposed` |
 | T-04 | Symlink and junction escape | A project symlink pointing outside the workspace | Write outside the project | Resolve links before writing; never follow links out of the workspace silently. Foundation: the project scanner skips symlinks (`crates/kaffein-infra/src/project_loader.rs`); explicitly opened file paths are still followed | `Partial` |
-| T-05 | Resource exhaustion | Deeply nested generics, a 2 GB single-line file, zip bombs | Freeze or OOM | Input size/depth limits, streaming parse, cancellable indexing, per-file budget. Foundation: 8 MiB file cap (`filesystem.rs`), scan depth 8 and 500 entries per directory (`project_loader.rs`) | `Partial` |
+| T-05 | Resource exhaustion | Deeply nested generics, a 2 GB single-line file, zip bombs | Freeze or OOM | Input size/depth limits, streaming parse, cancellable indexing, per-file budget. Foundation: 8 MiB file cap (`filesystem.rs`), 256 KiB locale catalog cap (`locale_files.rs`), scan depth 8 and 500 entries per directory (`project_loader.rs`) | `Partial` |
 | T-06 | Parser memory-safety defect | Malformed source triggering a panic or worse | Crash, potential corruption | Safe Rust, fuzz targets for every parser, no `unsafe` parsing, panic-free error paths | `Proposed` |
 | T-07 | Terminal escape injection | Build output containing OSC sequences that rewrite the window title or paste clipboard content | UI spoofing, clipboard hijack | Strip or neutralise control sequences before rendering | `Proposed` |
 | T-08 | Secret leakage in logs | A stack trace containing a token from the environment | Credential theft | Redact known secret patterns; deny-list environment dumps; log at boundaries only | `Proposed` |
@@ -120,6 +120,8 @@ Applies to source files, build files, archives, class files, and anything import
 - No `unsafe` in parsing code without a written justification and a focused audit.
 - Absolute and relative paths are validated against an explicit root, and the resolved path is what
   the user sees.
+- Locale catalogs are external input: validate the language code used as the file stem, cap the file
+  size, and ignore a file that does not parse instead of failing startup.
 
 ## Process execution
 

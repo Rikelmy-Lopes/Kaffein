@@ -9,5 +9,5 @@ pub mod ports;
 pub mod project;
 
 pub use document::{Document, DocumentId, LineEnding};
-pub use ports::{FileSystem, FsError, ProjectLoader};
+pub use ports::{FileSystem, FsError, FsErrorKind, ProjectLoader};
 pub use project::{ProjectEntry, ProjectTree};

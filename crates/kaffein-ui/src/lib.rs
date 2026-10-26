@@ -29,6 +29,7 @@ pub use ui_state::UiState;
 
 use egui::Context;
 use kaffein_app::{AppState, CommandRegistry, ThemePreference};
+use kaffein_i18n::Localizer;
 
 use crate::theme::Theme;
 
@@ -37,29 +38,61 @@ pub fn draw(
     ctx: &Context,
     state: &AppState,
     registry: &CommandRegistry,
+    localizer: &Localizer,
     ui_state: &mut UiState,
 ) -> Vec<UiAction> {
     let theme = theme_for(state.theme());
     apply_theme(ctx, state, ui_state, theme);
 
-    let now_ms = ctx.input(|input| (input.time * 1000.0) as u64);
     let mut actions = Vec::new();
 
     if !ui_state.prompt_is_open() {
-        actions::handle_shortcuts(ctx, state, registry, ui_state, &mut actions);
+        actions::handle_shortcuts(ctx, state, registry, localizer, ui_state, &mut actions);
     }
 
-    menu::draw_menu_bar(ctx, state, registry, ui_state, &mut actions, theme);
-    toolbar::draw_toolbar(ctx, state, registry, ui_state, &mut actions, theme);
-    status_bar::draw_status_bar(ctx, state, theme);
+    menu::draw_menu_bar(
+        ctx,
+        state,
+        registry,
+        localizer,
+        ui_state,
+        &mut actions,
+        theme,
+    );
+    toolbar::draw_toolbar(
+        ctx,
+        state,
+        registry,
+        localizer,
+        ui_state,
+        &mut actions,
+        theme,
+    );
+    status_bar::draw_status_bar(ctx, state, localizer, theme);
     if state.show_project_panel() {
-        project_panel::draw_project_panel(ctx, state, registry, ui_state, &mut actions, theme);
+        project_panel::draw_project_panel(
+            ctx,
+            state,
+            registry,
+            localizer,
+            ui_state,
+            &mut actions,
+            theme,
+        );
     }
     if state.show_bottom_panel() {
-        bottom_panel::draw_bottom_panel(ctx, ui_state, theme);
+        bottom_panel::draw_bottom_panel(ctx, localizer, ui_state, theme);
     }
-    editor::draw_editor_panel(ctx, state, registry, ui_state, &mut actions, theme, now_ms);
-    path_prompt::draw_path_prompt(ctx, ui_state, &mut actions);
+    editor::draw_editor_panel(
+        ctx,
+        state,
+        registry,
+        localizer,
+        ui_state,
+        &mut actions,
+        theme,
+    );
+    path_prompt::draw_path_prompt(ctx, localizer, ui_state, &mut actions);
 
     actions
 }

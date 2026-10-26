@@ -1,0 +1,11 @@
+[package]
+name = "kaffein-i18n"
+description = "Localised user-facing text for the Kaffein IDE"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+serde_json = "1.0"

@@ -13,6 +13,7 @@ path = "src/main.rs"
 
 [dependencies]
 kaffein-app.workspace = true
+kaffein-i18n.workspace = true
 kaffein-infra.workspace = true
 kaffein-ui.workspace = true
 

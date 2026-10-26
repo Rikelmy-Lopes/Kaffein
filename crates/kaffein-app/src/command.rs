@@ -21,6 +21,8 @@ pub use keys::{Key, KeyBinding};
 pub use outcome::{CommandError, CommandOutcome, Enablement, ErrorKind};
 pub use placement::{Menu, MenuPlacement, ToolbarPlacement};
 
+use kaffein_i18n::Localizer;
+
 use crate::services::Services as ServiceSet;
 use crate::state::AppState;
 
@@ -31,8 +33,10 @@ pub type CheckedFn = fn(&AppState) -> bool;
 #[derive(Clone, Copy)]
 pub struct Command {
     pub id: &'static str,
-    pub title: &'static str,
-    pub category: &'static str,
+    /// Localization key for the command name shown in menus and tooltips.
+    pub title_key: &'static str,
+    /// Localization key for the command category.
+    pub category_key: &'static str,
     pub menu: Option<MenuPlacement>,
     pub toolbar: Option<ToolbarPlacement>,
     pub shortcuts: &'static [KeyBinding],
@@ -50,6 +54,14 @@ impl Command {
     pub fn enablement(&self, state: &AppState) -> Enablement {
         (self.can_execute)(state)
     }
+
+    pub fn title<'a>(&self, localizer: &'a Localizer) -> &'a str {
+        localizer.text(self.title_key)
+    }
+
+    pub fn category<'a>(&self, localizer: &'a Localizer) -> &'a str {
+        localizer.text(self.category_key)
+    }
 }
 
 impl std::fmt::Debug for Command {
@@ -57,8 +69,8 @@ impl std::fmt::Debug for Command {
         formatter
             .debug_struct("Command")
             .field("id", &self.id)
-            .field("title", &self.title)
-            .field("category", &self.category)
+            .field("title_key", &self.title_key)
+            .field("category_key", &self.category_key)
             .finish_non_exhaustive()
     }
 }

@@ -1,7 +1,10 @@
 //! The command table. One entry per executable action.
 //!
 //! Menus, the toolbar, shortcuts, tests, and future automation read this table;
-//! adding a command means adding a row here, not editing four lists.
+//! adding a command means adding a row here, not editing four lists. Titles and
+//! labels are localization keys, not display text.
+
+use kaffein_i18n::keys;
 
 use crate::command::{
     command_id, ArgKind, Command, Key, KeyBinding, Menu, MenuPlacement, ToolbarPlacement,
@@ -24,8 +27,8 @@ pub(super) fn commands() -> Vec<Command> {
     vec![
         Command {
             id: command_id::PROJECT_OPEN,
-            title: "Open Project…",
-            category: "Project",
+            title_key: keys::COMMAND_PROJECT_OPEN_TITLE,
+            category_key: keys::CATEGORY_PROJECT,
             menu: Some(MenuPlacement {
                 menu: Menu::File,
                 order: 10,
@@ -33,7 +36,7 @@ pub(super) fn commands() -> Vec<Command> {
             }),
             toolbar: Some(ToolbarPlacement {
                 order: 10,
-                label: "Project",
+                label_key: keys::COMMAND_PROJECT_OPEN_TOOLBAR,
             }),
             shortcuts: &[],
             args: ArgKind::Directory,
@@ -43,8 +46,8 @@ pub(super) fn commands() -> Vec<Command> {
         },
         Command {
             id: command_id::FILE_NEW,
-            title: "New File…",
-            category: "File",
+            title_key: keys::COMMAND_FILE_NEW_TITLE,
+            category_key: keys::CATEGORY_FILE,
             menu: Some(MenuPlacement {
                 menu: Menu::File,
                 order: 5,
@@ -59,8 +62,8 @@ pub(super) fn commands() -> Vec<Command> {
         },
         Command {
             id: command_id::FILE_OPEN,
-            title: "Open File…",
-            category: "File",
+            title_key: keys::COMMAND_FILE_OPEN_TITLE,
+            category_key: keys::CATEGORY_FILE,
             menu: Some(MenuPlacement {
                 menu: Menu::File,
                 order: 20,
@@ -68,7 +71,7 @@ pub(super) fn commands() -> Vec<Command> {
             }),
             toolbar: Some(ToolbarPlacement {
                 order: 20,
-                label: "Open",
+                label_key: keys::COMMAND_FILE_OPEN_TOOLBAR,
             }),
             shortcuts: OPEN_SHORTCUTS,
             args: ArgKind::File,
@@ -78,8 +81,8 @@ pub(super) fn commands() -> Vec<Command> {
         },
         Command {
             id: command_id::FILE_SAVE,
-            title: "Save",
-            category: "File",
+            title_key: keys::COMMAND_FILE_SAVE_TITLE,
+            category_key: keys::CATEGORY_FILE,
             menu: Some(MenuPlacement {
                 menu: Menu::File,
                 order: 30,
@@ -87,7 +90,7 @@ pub(super) fn commands() -> Vec<Command> {
             }),
             toolbar: Some(ToolbarPlacement {
                 order: 30,
-                label: "Save",
+                label_key: keys::COMMAND_FILE_SAVE_TOOLBAR,
             }),
             shortcuts: SAVE_SHORTCUTS,
             args: ArgKind::None,
@@ -97,8 +100,8 @@ pub(super) fn commands() -> Vec<Command> {
         },
         Command {
             id: command_id::FILE_CLOSE,
-            title: "Close File",
-            category: "File",
+            title_key: keys::COMMAND_FILE_CLOSE_TITLE,
+            category_key: keys::CATEGORY_FILE,
             menu: Some(MenuPlacement {
                 menu: Menu::File,
                 order: 40,
@@ -113,8 +116,8 @@ pub(super) fn commands() -> Vec<Command> {
         },
         Command {
             id: command_id::EDIT_UNDO,
-            title: "Undo",
-            category: "Edit",
+            title_key: keys::COMMAND_EDIT_UNDO_TITLE,
+            category_key: keys::CATEGORY_EDIT,
             menu: Some(MenuPlacement {
                 menu: Menu::Edit,
                 order: 10,
@@ -122,7 +125,7 @@ pub(super) fn commands() -> Vec<Command> {
             }),
             toolbar: Some(ToolbarPlacement {
                 order: 40,
-                label: "Undo",
+                label_key: keys::COMMAND_EDIT_UNDO_TOOLBAR,
             }),
             shortcuts: UNDO_SHORTCUTS,
             args: ArgKind::None,
@@ -132,8 +135,8 @@ pub(super) fn commands() -> Vec<Command> {
         },
         Command {
             id: command_id::EDIT_REDO,
-            title: "Redo",
-            category: "Edit",
+            title_key: keys::COMMAND_EDIT_REDO_TITLE,
+            category_key: keys::CATEGORY_EDIT,
             menu: Some(MenuPlacement {
                 menu: Menu::Edit,
                 order: 20,
@@ -141,7 +144,7 @@ pub(super) fn commands() -> Vec<Command> {
             }),
             toolbar: Some(ToolbarPlacement {
                 order: 50,
-                label: "Redo",
+                label_key: keys::COMMAND_EDIT_REDO_TOOLBAR,
             }),
             shortcuts: REDO_SHORTCUTS,
             args: ArgKind::None,
@@ -151,8 +154,8 @@ pub(super) fn commands() -> Vec<Command> {
         },
         Command {
             id: command_id::VIEW_TOGGLE_PROJECT,
-            title: "Project Panel",
-            category: "View",
+            title_key: keys::COMMAND_VIEW_TOGGLE_PROJECT_TITLE,
+            category_key: keys::CATEGORY_VIEW,
             menu: Some(MenuPlacement {
                 menu: Menu::View,
                 order: 10,
@@ -167,8 +170,8 @@ pub(super) fn commands() -> Vec<Command> {
         },
         Command {
             id: command_id::VIEW_TOGGLE_BOTTOM,
-            title: "Bottom Panel",
-            category: "View",
+            title_key: keys::COMMAND_VIEW_TOGGLE_BOTTOM_TITLE,
+            category_key: keys::CATEGORY_VIEW,
             menu: Some(MenuPlacement {
                 menu: Menu::View,
                 order: 20,
@@ -183,8 +186,8 @@ pub(super) fn commands() -> Vec<Command> {
         },
         Command {
             id: command_id::VIEW_TOGGLE_THEME,
-            title: "Dark Theme",
-            category: "View",
+            title_key: keys::COMMAND_VIEW_TOGGLE_THEME_TITLE,
+            category_key: keys::CATEGORY_VIEW,
             menu: Some(MenuPlacement {
                 menu: Menu::View,
                 order: 30,
@@ -199,8 +202,8 @@ pub(super) fn commands() -> Vec<Command> {
         },
         Command {
             id: command_id::APP_QUIT,
-            title: "Quit",
-            category: "Application",
+            title_key: keys::COMMAND_APP_QUIT_TITLE,
+            category_key: keys::CATEGORY_APPLICATION,
             menu: Some(MenuPlacement {
                 menu: Menu::File,
                 order: 100,
@@ -213,12 +216,24 @@ pub(super) fn commands() -> Vec<Command> {
             checked: None,
             run: commands::app_quit,
         },
+        Command {
+            id: command_id::APP_SET_LOCALE,
+            title_key: keys::COMMAND_APP_SET_LOCALE_TITLE,
+            category_key: keys::CATEGORY_APPLICATION,
+            menu: None,
+            toolbar: None,
+            shortcuts: &[],
+            args: ArgKind::Locale,
+            can_execute: always,
+            checked: None,
+            run: commands::app_set_locale,
+        },
         // Internal commands: registered so tests and future automation use the
         // same implementation, but not shown in any menu.
         Command {
             id: command_id::EDITOR_REPLACE_TEXT,
-            title: "Replace Document Text",
-            category: "Editor",
+            title_key: keys::COMMAND_EDITOR_REPLACE_TEXT_TITLE,
+            category_key: keys::CATEGORY_EDITOR,
             menu: None,
             toolbar: None,
             shortcuts: &[],
@@ -229,8 +244,8 @@ pub(super) fn commands() -> Vec<Command> {
         },
         Command {
             id: command_id::EDITOR_ACTIVATE,
-            title: "Activate Document",
-            category: "Editor",
+            title_key: keys::COMMAND_EDITOR_ACTIVATE_TITLE,
+            category_key: keys::CATEGORY_EDITOR,
             menu: None,
             toolbar: None,
             shortcuts: &[],

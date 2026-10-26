@@ -1,9 +1,9 @@
 //! Enablement predicates used by the command catalog.
 
+use kaffein_i18n::keys;
+
 use crate::command::Enablement;
 use crate::state::{AppState, ThemePreference};
-
-const NO_DOCUMENT: &str = "No document is open";
 
 pub(super) fn always(_: &AppState) -> Enablement {
     Enablement::Enabled
@@ -13,23 +13,23 @@ pub(super) fn has_document(state: &AppState) -> Enablement {
     if state.active_document().is_some() {
         Enablement::Enabled
     } else {
-        Enablement::Disabled(NO_DOCUMENT)
+        Enablement::Disabled(keys::ENABLEMENT_NO_DOCUMENT)
     }
 }
 
 pub(super) fn can_undo(state: &AppState) -> Enablement {
     match state.active_document() {
         Some(document) if document.can_undo() => Enablement::Enabled,
-        Some(_) => Enablement::Disabled("Nothing to undo"),
-        None => Enablement::Disabled(NO_DOCUMENT),
+        Some(_) => Enablement::Disabled(keys::ENABLEMENT_NOTHING_TO_UNDO),
+        None => Enablement::Disabled(keys::ENABLEMENT_NO_DOCUMENT),
     }
 }
 
 pub(super) fn can_redo(state: &AppState) -> Enablement {
     match state.active_document() {
         Some(document) if document.can_redo() => Enablement::Enabled,
-        Some(_) => Enablement::Disabled("Nothing to redo"),
-        None => Enablement::Disabled(NO_DOCUMENT),
+        Some(_) => Enablement::Disabled(keys::ENABLEMENT_NOTHING_TO_REDO),
+        None => Enablement::Disabled(keys::ENABLEMENT_NO_DOCUMENT),
     }
 }
 

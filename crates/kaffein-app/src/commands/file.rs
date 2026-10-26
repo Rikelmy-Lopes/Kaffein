@@ -1,12 +1,13 @@
 //! File lifecycle commands: new, open, save, close.
 
 use kaffein_domain::Document;
+use kaffein_i18n::{keys, Text};
 
 use crate::command::{CommandArgs, CommandOutcome, ErrorKind};
 use crate::services::Services;
 use crate::state::AppState;
 
-use super::helpers::{path_from_args, target_document, user_error};
+use super::helpers::{fs_error_text, path_from_args, target_document, user_error};
 
 pub(crate) fn file_new(
     state: &mut AppState,
@@ -18,10 +19,10 @@ pub(crate) fn file_new(
         Err(outcome) => return outcome,
     };
     if path.as_os_str().is_empty() {
-        return user_error("Enter a file path.");
+        return user_error(Text::key(keys::MESSAGE_FILE_ENTER_PATH));
     }
     let Some(file_name) = path.file_name() else {
-        return user_error("Enter a file name, not a folder.");
+        return user_error(Text::key(keys::MESSAGE_FILE_ENTER_NAME));
     };
     let parent = path
         .parent()
@@ -30,25 +31,23 @@ pub(crate) fn file_new(
     let parent = match services.fs.canonicalize(parent) {
         Ok(parent) => parent,
         Err(error) => {
-            return user_error(format!(
-                "Cannot create a file in {}: {error}",
-                crate::display_path(parent)
-            ));
+            return user_error(
+                Text::message(keys::MESSAGE_FILE_CANNOT_CREATE).arg("error", fs_error_text(&error)),
+            );
         }
     };
 
     let target = parent.join(file_name);
     if services.fs.canonicalize(&target).is_ok() {
-        return user_error(format!(
-            "{} already exists. Open it instead.",
-            crate::display_path(&target)
-        ));
+        return user_error(
+            Text::message(keys::MESSAGE_FILE_EXISTS).arg("path", crate::display_path(&target)),
+        );
     }
 
     let id = state.allocate_document_id();
     let name = file_name.to_string_lossy().into_owned();
     state.add_document(Document::new(id, target));
-    CommandOutcome::success(format!("Created {name} (unsaved)"))
+    CommandOutcome::success(Text::message(keys::MESSAGE_FILE_CREATED).arg("name", name))
 }
 
 pub(crate) fn file_open(
@@ -61,16 +60,15 @@ pub(crate) fn file_open(
         Err(outcome) => return outcome,
     };
     if path.as_os_str().is_empty() {
-        return user_error("Enter a file path.");
+        return user_error(Text::key(keys::MESSAGE_FILE_ENTER_PATH));
     }
 
     let canonical = match services.fs.canonicalize(&path) {
         Ok(path) => path,
         Err(error) => {
-            return user_error(format!(
-                "Cannot open {}: {error}",
-                crate::display_path(&path)
-            ));
+            return user_error(
+                Text::message(keys::MESSAGE_FILE_CANNOT_OPEN).arg("error", fs_error_text(&error)),
+            );
         }
     };
 
@@ -78,7 +76,9 @@ pub(crate) fn file_open(
         let id = existing.id();
         let name = existing.display_name();
         state.activate(id);
-        return CommandOutcome::success(format!("Switched to {name}"));
+        return CommandOutcome::success(
+            Text::message(keys::MESSAGE_FILE_SWITCHED).arg("name", name),
+        );
     }
 
     let raw = match services.fs.read_text(&canonical) {
@@ -86,7 +86,7 @@ pub(crate) fn file_open(
         Err(error) => {
             return CommandOutcome::failed(
                 ErrorKind::UnsupportedState,
-                format!("Cannot read {}: {error}", crate::display_path(&canonical)),
+                Text::message(keys::MESSAGE_FILE_CANNOT_READ).arg("error", fs_error_text(&error)),
             );
         }
     };
@@ -97,7 +97,7 @@ pub(crate) fn file_open(
         .map(|name| name.to_string_lossy().into_owned())
         .unwrap_or_else(|| crate::display_path(&canonical));
     state.add_document(Document::from_loaded(id, canonical, &raw));
-    CommandOutcome::success(format!("Opened {name}"))
+    CommandOutcome::success(Text::message(keys::MESSAGE_FILE_OPENED).arg("name", name))
 }
 
 pub(crate) fn file_save(
@@ -106,13 +106,13 @@ pub(crate) fn file_save(
     _args: CommandArgs,
 ) -> CommandOutcome {
     let Some(id) = state.active_id() else {
-        return CommandOutcome::no_op("No document is open");
+        return CommandOutcome::no_op(Text::key(keys::MESSAGE_FILE_NO_DOCUMENT));
     };
     let Some(document) = state.document(id) else {
-        return CommandOutcome::no_op("No document is open");
+        return CommandOutcome::no_op(Text::key(keys::MESSAGE_FILE_NO_DOCUMENT));
     };
     if !document.is_dirty() {
-        return CommandOutcome::no_op("No changes to save");
+        return CommandOutcome::no_op(Text::key(keys::MESSAGE_FILE_NO_CHANGES));
     }
 
     let path = document.path().to_path_buf();
@@ -122,14 +122,14 @@ pub(crate) fn file_save(
     if let Err(error) = services.fs.write_text(&path, &text) {
         return CommandOutcome::failed(
             ErrorKind::ToolFailure,
-            format!("Cannot save {}: {error}", crate::display_path(&path)),
+            Text::message(keys::MESSAGE_FILE_CANNOT_SAVE).arg("error", fs_error_text(&error)),
         );
     }
 
     if let Some(document) = state.document_mut(id) {
         document.mark_saved();
     }
-    CommandOutcome::success(format!("Saved {name}"))
+    CommandOutcome::success(Text::message(keys::MESSAGE_FILE_SAVED).arg("name", name))
 }
 
 pub(crate) fn file_close(
@@ -138,20 +138,19 @@ pub(crate) fn file_close(
     args: CommandArgs,
 ) -> CommandOutcome {
     let Some(id) = target_document(state, &args) else {
-        return CommandOutcome::no_op("No document is open");
+        return CommandOutcome::no_op(Text::key(keys::MESSAGE_FILE_NO_DOCUMENT));
     };
     let Some(document) = state.document(id) else {
-        return CommandOutcome::no_op("Document is no longer open");
+        return CommandOutcome::no_op(Text::key(keys::MESSAGE_FILE_DOCUMENT_GONE));
     };
 
     if document.is_dirty() {
-        return CommandOutcome::no_op(format!(
-            "{} has unsaved changes. Save it before closing.",
-            document.display_name()
-        ));
+        return CommandOutcome::no_op(
+            Text::message(keys::MESSAGE_FILE_UNSAVED_CHANGES).arg("name", document.display_name()),
+        );
     }
 
     let name = document.display_name();
     state.remove_document(id);
-    CommandOutcome::success(format!("Closed {name}"))
+    CommandOutcome::success(Text::message(keys::MESSAGE_FILE_CLOSED).arg("name", name))
 }

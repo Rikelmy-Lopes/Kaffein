@@ -9,6 +9,7 @@ pub enum CommandArgs {
     None,
     Path(PathBuf),
     Document(DocumentId),
+    Locale(String),
     ReplaceText {
         document: DocumentId,
         text: String,
@@ -33,6 +34,7 @@ pub enum ArgKind {
     NewFile,
     File,
     Directory,
+    Locale,
     Text,
 }
 

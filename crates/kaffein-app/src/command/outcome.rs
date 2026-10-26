@@ -1,5 +1,7 @@
 //! What a command reports back to its caller.
 
+use kaffein_i18n::{keys, Text};
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum ErrorKind {
     UserInput,
@@ -9,12 +11,12 @@ pub enum ErrorKind {
 }
 
 impl ErrorKind {
-    pub fn label(self) -> &'static str {
+    pub fn key(self) -> &'static str {
         match self {
-            Self::UserInput => "invalid input",
-            Self::UnsupportedState => "unsupported state",
-            Self::ToolFailure => "tool failure",
-            Self::Internal => "internal error",
+            Self::UserInput => keys::ERROR_KIND_USER_INPUT,
+            Self::UnsupportedState => keys::ERROR_KIND_UNSUPPORTED_STATE,
+            Self::ToolFailure => keys::ERROR_KIND_TOOL_FAILURE,
+            Self::Internal => keys::ERROR_KIND_INTERNAL,
         }
     }
 }
@@ -22,11 +24,11 @@ impl ErrorKind {
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct CommandError {
     pub kind: ErrorKind,
-    pub message: String,
+    pub message: Text,
 }
 
 impl CommandError {
-    pub fn new(kind: ErrorKind, message: impl Into<String>) -> Self {
+    pub fn new(kind: ErrorKind, message: impl Into<Text>) -> Self {
         Self {
             kind,
             message: message.into(),
@@ -37,19 +39,19 @@ impl CommandError {
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum CommandOutcome {
     Success {
-        message: Option<String>,
+        message: Option<Text>,
     },
     /// Precondition unmet. The reason is shown to the user; it is not a silent
     /// success.
     NoOp {
-        reason: String,
+        reason: Text,
     },
     Cancelled,
     Failed(CommandError),
 }
 
 impl CommandOutcome {
-    pub fn success(message: impl Into<String>) -> Self {
+    pub fn success(message: impl Into<Text>) -> Self {
         Self::Success {
             message: Some(message.into()),
         }
@@ -59,21 +61,22 @@ impl CommandOutcome {
         Self::Success { message: None }
     }
 
-    pub fn no_op(reason: impl Into<String>) -> Self {
+    pub fn no_op(reason: impl Into<Text>) -> Self {
         Self::NoOp {
             reason: reason.into(),
         }
     }
 
-    pub fn failed(kind: ErrorKind, message: impl Into<String>) -> Self {
+    pub fn failed(kind: ErrorKind, message: impl Into<Text>) -> Self {
         Self::Failed(CommandError::new(kind, message))
     }
 
-    pub fn message(&self) -> Option<&str> {
+    /// The deferred text, resolved by the UI against the active locale.
+    pub fn message(&self) -> Option<&Text> {
         match self {
-            Self::Success { message } => message.as_deref(),
+            Self::Success { message } => message.as_ref(),
             Self::NoOp { reason } => Some(reason),
-            Self::Cancelled => Some("Cancelled"),
+            Self::Cancelled => None,
             Self::Failed(error) => Some(&error.message),
         }
     }
@@ -86,6 +89,8 @@ impl CommandOutcome {
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Enablement {
     Enabled,
+    /// The reason is a localization key so the UI can render it in the active
+    /// language.
     Disabled(&'static str),
 }
 

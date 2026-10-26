@@ -37,16 +37,43 @@ cargo run -p kaffein        # desktop binary (verified 2026-10-26)
 Rules of thumb:
 
 - `cargo check` is the inner-loop command; run it before every commit.
+- `cargo check` and `cargo test` do not relink `target/debug/kaffein.exe`. After a UI change, run
+  `cargo build -p kaffein` or `cargo run -p kaffein` before inspecting the window; otherwise the
+  old binary hides menu and panel changes.
 - UI performance work needs `--release`; a debug build misleads by an order of magnitude.
 - If the workspace splits the engine from the binary, run the binary package explicitly rather than
   relying on `cargo run` picking a default member.
+
+### Locales and user settings
+
+Bundled catalogs live in `crates/kaffein-i18n/locales/` and are compiled into the binary. At startup
+`FileLocaleSource::discover()` also reads the user configuration directory:
+
+| Platform | Configuration root |
+|---|---|
+| Windows | `%APPDATA%\Kaffein` |
+| macOS | `~/Library/Application Support/Kaffein` |
+| Linux/BSD | `$XDG_CONFIG_HOME/kaffein`, else `~/.config/kaffein` |
+| Fallback | `.kaffein` in the working directory |
+| Override | `KAFFEIN_CONFIG_DIR` replaces the root on every platform |
+
+`locales/<code>.json` adds or overrides a language, and `settings.json` stores the selected locale
+under `"locale"` while preserving other keys. Invalid language codes, files over 256 KiB, and
+malformed catalogs are ignored; the embedded catalog stays in effect. To add a language, copy
+[`en.json`](../crates/kaffein-i18n/locales/en.json), translate the entries, set `meta.name`,
+`meta.decimal`, `meta.group`, and `meta.date`, and save it as `<code>.json` in `locales/`. No
+recompile is needed, and the language menu in [`ui-design.md`](ui-design.md) › Localisation lists the
+new locale on the next launch.
+
+Run `cargo test -p kaffein-i18n` after changing keys or catalogs; the completeness test covers every
+bundled locale.
 
 ## Test and quality gates
 
 ```sh
 cargo test --workspace
-cargo fmt --check
-cargo clippy --all-targets --all-features -- -D warnings
+cargo fmt --all -- --check
+cargo clippy --workspace --all-targets --all-features -- -D warnings
 ```
 
 Run the gates the project actually supports and report failures verbatim. A gate that cannot run on
@@ -208,18 +235,23 @@ is `Unknown` — do not guess.
 
 | Fact | Value | Status | Evidence | Date |
 |---|---|---|---|---|
-| Workspace members | `kaffein`, `kaffein-app`, `kaffein-domain`, `kaffein-infra`, `kaffein-ui` | `Implemented` | `cargo metadata --no-deps --format-version 1` | 2026-10-26 |
+| Workspace members | `kaffein`, `kaffein-app`, `kaffein-domain`, `kaffein-i18n`, `kaffein-infra`, `kaffein-ui` | `Implemented` | `cargo metadata --no-deps --format-version 1` | 2026-10-26 |
 | Main binary / package | `kaffein`, target `crates/kaffein/src/main.rs` | `Implemented` | `cargo metadata` targets | 2026-10-26 |
 | Rust toolchain / MSRV | Pinned `1.98.1`; MSRV declared `1.85` but only `1.98.1` has built the workspace | `Partial` | `rust-toolchain.toml`, `[workspace.package] rust-version` | 2026-10-26 |
 | Supported operating systems | Windows (window launched); macOS and Linux unverified | `Partial` | `target\debug\kaffein.exe`, window title `Kaffein` | 2026-10-26 |
 | CI gates | None configured | `Unknown` | no `.github/workflows` or other CI configuration in the repository | 2026-10-26 |
-| Required environment variables | None | `Implemented` | `crates/kaffein/src/app.rs` constructs services without reading the environment; launch succeeded | 2026-10-26 |
+| Required environment variables | None required; `KAFFEIN_CONFIG_DIR` optionally overrides the locale/settings directory | `Implemented` | `crates/kaffein-infra/src/locale_files.rs` › `config_root`; launch succeeded without it | 2026-10-26 |
 | Logging configuration | No subscriber or log file; command outcomes surface in the status bar | `Partial` | `kaffein_app::Workspace::record_outcome`; gap: persistent logs and `RUST_LOG` integration | 2026-10-26 |
 | Automation entry points | None | `Planned` | no CLI, socket listener, or control channel in the workspace | 2026-10-26 |
 | JDK discovery order | Not implemented | `Planned` | no JDK module in the workspace | 2026-10-26 |
 | GUI backend | `eframe 0.29.1` with `glow` and bundled default fonts | `Implemented` | `Cargo.toml`; `cargo tree --depth 1 -p kaffein` | 2026-10-26 |
 | Build, format, lint, test | `cargo check --workspace`, `cargo fmt --all -- --check`, `cargo clippy --all-targets --all-features -- -D warnings`, `cargo test --workspace` all passed; 39 tests | `Verified` | command output | 2026-10-26 |
+| Build, format, lint, test after localisation | `cargo check --workspace`, `cargo fmt --all -- --check`, `cargo clippy --all-targets --all-features -- -D warnings`, `cargo test --workspace` all passed; 43 tests (20 app, 9 domain, 4 i18n, 5 infra, 5 UI) | `Verified` | command output | 2026-10-26 |
+| Build, format, lint, test after locale switching | `cargo check --workspace`, `cargo fmt --all -- --check`, `cargo clippy --workspace --all-targets --all-features -- -D warnings`, `cargo test --workspace` all passed; 59 tests (23 app, 9 domain, 12 i18n, 9 infra, 6 UI) | `Verified` | command output | 2026-10-26 |
+| Bundled localisation catalogs | `en` and `pt-BR` in `crates/kaffein-i18n/locales/`; the selected locale persists in `settings.json` | `Implemented` | `cargo test -p kaffein-i18n`; `every_declared_key_resolves_in_every_bundled_locale` | 2026-10-26 |
 | Largest Rust source file | `crates/kaffein-app/src/registry/catalog.rs` — 243 lines; budget is 300 | `Verified` | [File budget check](#file-budget-check) | 2026-10-26 |
+| Largest Rust source file after localisation | `crates/kaffein-app/src/registry/catalog.rs` — 246 lines; `kaffein-i18n/src/keys.rs` is 159 lines; budget is 300 | `Verified` | [File budget check](#file-budget-check) | 2026-10-26 |
+| Largest Rust source file after locale switching | `crates/kaffein-app/src/registry/catalog.rs` — 258 lines; `kaffein-i18n/src/localizer.rs` is 253 lines; budget is 300 | `Verified` | [File budget check](#file-budget-check) | 2026-10-26 |
 | App launch smoke test | Debug binary stayed running for 6 s with window title `Kaffein` and empty stderr | `Verified` | `Start-Process .\target\debug\kaffein.exe` | 2026-10-26 |
 
 ## Verification

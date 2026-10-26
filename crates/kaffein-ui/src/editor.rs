@@ -5,6 +5,7 @@ use egui::{
 };
 use kaffein_app::{command_id, AppState, CommandArgs, CommandRegistry};
 use kaffein_domain::DocumentId;
+use kaffein_i18n::{keys, Localizer};
 
 use crate::actions::UiAction;
 use crate::theme::{self, Theme, ROW_COMPACT, ROW_STANDARD, SPACE_1, SPACE_2, SPACE_3, SPACE_4};
@@ -21,11 +22,12 @@ pub(crate) fn draw_editor_panel(
     ctx: &Context,
     state: &AppState,
     registry: &CommandRegistry,
+    localizer: &Localizer,
     ui_state: &mut UiState,
     actions: &mut Vec<UiAction>,
     theme: Theme,
-    now_ms: u64,
 ) {
+    let now_ms = ctx.input(|input| (input.time * 1000.0) as u64);
     CentralPanel::default()
         .frame(Frame::none().fill(theme.surface_editor))
         .show(ctx, |ui| {
@@ -34,12 +36,12 @@ pub(crate) fn draw_editor_panel(
                     let shortcut = registry
                         .get(command_id::FILE_OPEN)
                         .and_then(|command| command.primary_shortcut())
-                        .map(|shortcut| format!(" ({})", shortcut.display()))
+                        .map(|shortcut| format!(" ({})", shortcut.display(localizer)))
                         .unwrap_or_default();
                     ui.label(
-                        RichText::new(format!(
-                            "No file open — use File › Open File…{shortcut} or open a project."
-                        ))
+                        RichText::new(
+                            localizer.format(keys::EDITOR_WELCOME, &[("shortcut", &shortcut)]),
+                        )
                         .size(theme::WELCOME_FONT_SIZE)
                         .color(theme.text_muted),
                     );
@@ -47,13 +49,19 @@ pub(crate) fn draw_editor_panel(
                 return;
             }
 
-            draw_tabs(ui, state, actions, theme);
+            draw_tabs(ui, state, localizer, actions, theme);
             ui.separator();
             draw_editor_text(ui, state, ui_state, actions, theme, now_ms);
         });
 }
 
-fn draw_tabs(ui: &mut Ui, state: &AppState, actions: &mut Vec<UiAction>, theme: Theme) {
+fn draw_tabs(
+    ui: &mut Ui,
+    state: &AppState,
+    localizer: &Localizer,
+    actions: &mut Vec<UiAction>,
+    theme: Theme,
+) {
     Frame::none()
         .fill(theme.surface_panel)
         .inner_margin(Margin::symmetric(SPACE_4, SPACE_1))
@@ -89,7 +97,7 @@ fn draw_tabs(ui: &mut Ui, state: &AppState, actions: &mut Vec<UiAction>, theme: 
                                         .frame(false)
                                         .min_size(Vec2::splat(ROW_COMPACT)),
                                 )
-                                .on_hover_text("Close file");
+                                .on_hover_text(localizer.text(keys::EDITOR_CLOSE_FILE));
                             if close.clicked() || response.middle_clicked() {
                                 actions.push(UiAction {
                                     command: command_id::FILE_CLOSE,

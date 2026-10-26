@@ -1,10 +1,12 @@
 //! Project commands.
 
+use kaffein_i18n::{keys, Text};
+
 use crate::command::{CommandArgs, CommandOutcome, ErrorKind};
 use crate::services::Services;
 use crate::state::AppState;
 
-use super::helpers::{path_from_args, user_error};
+use super::helpers::{fs_error_text, path_from_args, user_error};
 
 pub(crate) fn project_open(
     state: &mut AppState,
@@ -16,16 +18,16 @@ pub(crate) fn project_open(
         Err(outcome) => return outcome,
     };
     if path.as_os_str().is_empty() {
-        return user_error("Enter a project folder path.");
+        return user_error(Text::key(keys::MESSAGE_PROJECT_ENTER_PATH));
     }
 
     let canonical = match services.fs.canonicalize(&path) {
         Ok(path) => path,
         Err(error) => {
-            return user_error(format!(
-                "Cannot open {}: {error}",
-                crate::display_path(&path)
-            ));
+            return user_error(
+                Text::message(keys::MESSAGE_PROJECT_CANNOT_OPEN)
+                    .arg("error", fs_error_text(&error)),
+            );
         }
     };
 
@@ -34,15 +36,13 @@ pub(crate) fn project_open(
         Err(error) => {
             return CommandOutcome::failed(
                 ErrorKind::UnsupportedState,
-                format!(
-                    "Cannot read project {}: {error}",
-                    crate::display_path(&canonical)
-                ),
+                Text::message(keys::MESSAGE_PROJECT_CANNOT_READ)
+                    .arg("error", fs_error_text(&error)),
             );
         }
     };
 
     let name = project.name().to_owned();
     state.set_project(project);
-    CommandOutcome::success(format!("Opened project {name}"))
+    CommandOutcome::success(Text::message(keys::MESSAGE_PROJECT_OPENED).arg("name", name))
 }

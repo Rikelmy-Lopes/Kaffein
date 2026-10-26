@@ -11,7 +11,7 @@ mod helpers;
 mod project;
 mod view;
 
-pub(crate) use app::app_quit;
+pub(crate) use app::{app_quit, app_set_locale};
 pub(crate) use edit::{edit_redo, edit_undo, editor_activate, editor_replace_text};
 pub(crate) use file::{file_close, file_new, file_open, file_save};
 pub(crate) use project::project_open;

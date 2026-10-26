@@ -1,4 +1,5 @@
 use kaffein_domain::{Document, DocumentId, ProjectTree};
+use kaffein_i18n::{keys, Text};
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub enum ThemePreference {
@@ -8,10 +9,10 @@ pub enum ThemePreference {
 }
 
 impl ThemePreference {
-    pub fn label(self) -> &'static str {
+    pub fn label_key(self) -> &'static str {
         match self {
-            Self::Dark => "Dark",
-            Self::Light => "Light",
+            Self::Dark => keys::STATUS_THEME_DARK,
+            Self::Light => keys::STATUS_THEME_LIGHT,
         }
     }
 }
@@ -26,25 +27,26 @@ pub enum MessageSeverity {
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct StatusMessage {
     pub severity: MessageSeverity,
-    pub text: String,
+    /// Deferred text, so a locale change re-renders the existing message.
+    pub text: Text,
 }
 
 impl StatusMessage {
-    pub fn info(text: impl Into<String>) -> Self {
+    pub fn info(text: impl Into<Text>) -> Self {
         Self {
             severity: MessageSeverity::Info,
             text: text.into(),
         }
     }
 
-    pub fn warning(text: impl Into<String>) -> Self {
+    pub fn warning(text: impl Into<Text>) -> Self {
         Self {
             severity: MessageSeverity::Warning,
             text: text.into(),
         }
     }
 
-    pub fn error(text: impl Into<String>) -> Self {
+    pub fn error(text: impl Into<Text>) -> Self {
         Self {
             severity: MessageSeverity::Error,
             text: text.into(),

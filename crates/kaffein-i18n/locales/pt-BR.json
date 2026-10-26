@@ -1,0 +1,232 @@
+{
+  "meta": {
+    "name": "Português (Brasil)",
+    "decimal": ",",
+    "group": ".",
+    "date": "DD/MM/YYYY"
+  },
+  "app": {
+    "title": "Kaffein"
+  },
+  "common": {
+    "cancel": "Cancelar",
+    "cancelled": "Cancelado"
+  },
+  "menu": {
+    "file": "Arquivo",
+    "edit": "Editar",
+    "view": "Exibir",
+    "language": "Idioma"
+  },
+  "category": {
+    "project": "Projeto",
+    "file": "Arquivo",
+    "edit": "Edição",
+    "view": "Exibição",
+    "application": "Aplicativo",
+    "editor": "Editor"
+  },
+  "command": {
+    "project": {
+      "open": {
+        "title": "Abrir Projeto…",
+        "toolbar": "Projeto"
+      }
+    },
+    "file": {
+      "new": {
+        "title": "Novo Arquivo…"
+      },
+      "open": {
+        "title": "Abrir Arquivo…",
+        "toolbar": "Abrir"
+      },
+      "save": {
+        "title": "Salvar",
+        "toolbar": "Salvar"
+      },
+      "close": {
+        "title": "Fechar Arquivo"
+      }
+    },
+    "edit": {
+      "undo": {
+        "title": "Desfazer",
+        "toolbar": "Desfazer"
+      },
+      "redo": {
+        "title": "Refazer",
+        "toolbar": "Refazer"
+      }
+    },
+    "view": {
+      "toggle_project": {
+        "title": "Painel do Projeto"
+      },
+      "toggle_bottom": {
+        "title": "Painel Inferior"
+      },
+      "toggle_theme": {
+        "title": "Tema Escuro"
+      }
+    },
+    "app": {
+      "quit": {
+        "title": "Sair"
+      },
+      "set_locale": {
+        "title": "Definir Idioma"
+      }
+    },
+    "editor": {
+      "replace_text": {
+        "title": "Substituir Texto do Documento"
+      },
+      "activate": {
+        "title": "Ativar Documento"
+      }
+    }
+  },
+  "status": {
+    "no_project": "Nenhum projeto",
+    "line_count": {
+      "one": "{count} linha",
+      "other": "{count} linhas"
+    },
+    "encoding": {
+      "utf8": "UTF-8"
+    },
+    "line_ending": {
+      "lf": "LF",
+      "crlf": "CRLF"
+    },
+    "theme": {
+      "dark": "Escuro",
+      "light": "Claro"
+    }
+  },
+  "editor": {
+    "welcome": "Nenhum arquivo aberto — use Arquivo › Abrir Arquivo…{shortcut} ou abra um projeto.",
+    "close_file": "Fechar arquivo"
+  },
+  "project_panel": {
+    "header": "PROJETO",
+    "open": "Abrir…",
+    "open_tooltip": "Abrir uma pasta de projeto",
+    "empty": "Nenhum projeto aberto",
+    "open_project": "Abrir Projeto…"
+  },
+  "bottom_panel": {
+    "tab": {
+      "problems": "Problemas",
+      "build": "Compilação",
+      "console": "Console"
+    },
+    "empty": {
+      "problems": "Nenhum problema. Os diagnósticos aparecerão quando a análise de Java estiver disponível.",
+      "build": "A saída da compilação aparecerá aqui quando a integração de compilação for implementada.",
+      "console": "A saída de processos aparecerá aqui quando a integração de execução for implementada."
+    }
+  },
+  "prompt": {
+    "directory": {
+      "label": "Pasta do projeto",
+      "hint": "Cole o caminho de uma pasta, por exemplo C:\\work\\projeto",
+      "action": "Abrir Projeto"
+    },
+    "new_file": {
+      "label": "Caminho do arquivo",
+      "hint": "Cole o caminho de um novo arquivo, por exemplo C:\\work\\projeto\\src\\Novo.java",
+      "action": "Criar Arquivo"
+    },
+    "file": {
+      "label": "Caminho do arquivo",
+      "hint": "Cole o caminho de um arquivo, por exemplo C:\\work\\projeto\\src\\App.java",
+      "action": "Abrir Arquivo"
+    },
+    "error": {
+      "path_required": "Informe um caminho."
+    },
+    "default_new_file_name": "SemTitulo.java"
+  },
+  "keybinding": {
+    "ctrl": "Ctrl",
+    "shift": "Shift",
+    "alt": "Alt"
+  },
+  "error": {
+    "kind": {
+      "user_input": "entrada inválida",
+      "unsupported_state": "estado não suportado",
+      "tool_failure": "falha na ferramenta",
+      "internal": "erro interno"
+    }
+  },
+  "enablement": {
+    "no_document": "Nenhum documento está aberto",
+    "nothing_to_undo": "Nada para desfazer",
+    "nothing_to_redo": "Nada para refazer",
+    "unknown_command": "Comando desconhecido"
+  },
+  "message": {
+    "workspace": {
+      "error": "{kind}: {message}",
+      "unregistered": "O comando '{id}' não está registrado",
+      "requires_path": "O comando '{id}' exige um argumento de caminho"
+    },
+    "file": {
+      "enter_path": "Informe o caminho de um arquivo.",
+      "enter_name": "Informe um nome de arquivo, não uma pasta.",
+      "cannot_create": "Não foi possível criar o arquivo: {error}",
+      "exists": "{path} já existe. Abra-o em vez disso.",
+      "created": "Criado {name} (não salvo)",
+      "cannot_open": "Não foi possível abrir o arquivo: {error}",
+      "switched": "Alternado para {name}",
+      "cannot_read": "Não foi possível ler o arquivo: {error}",
+      "opened": "Aberto {name}",
+      "no_document": "Nenhum documento está aberto",
+      "no_changes": "Nenhuma alteração para salvar",
+      "cannot_save": "Não foi possível salvar o arquivo: {error}",
+      "saved": "{name} salvo",
+      "document_gone": "O documento não está mais aberto",
+      "unsaved_changes": "{name} tem alterações não salvas. Salve-o antes de fechar.",
+      "closed": "{name} fechado"
+    },
+    "project": {
+      "enter_path": "Informe o caminho de uma pasta de projeto.",
+      "cannot_open": "Não foi possível abrir o projeto: {error}",
+      "cannot_read": "Não foi possível ler o projeto: {error}",
+      "opened": "Projeto {name} aberto"
+    },
+    "edit": {
+      "no_document": "Nenhum documento está aberto",
+      "nothing_to_undo": "Nada para desfazer",
+      "nothing_to_redo": "Nada para refazer",
+      "replace_requires_text": "editor.replace_text exige argumentos de texto",
+      "document_gone": "O documento não está mais aberto",
+      "activate_requires_document": "editor.activate exige um argumento de documento"
+    },
+    "view": {
+      "theme": "Tema: {theme}"
+    },
+    "app": {
+      "dirty_documents": {
+        "one": "{count} documento tem alterações não salvas. Salve-o antes de sair.",
+        "other": "{count} documentos têm alterações não salvas. Salve-os antes de sair."
+      },
+      "locale_changed": "Idioma: {language}",
+      "locale_unknown": "O idioma '{code}' não está disponível",
+      "locale_save_failed": "Não foi possível salvar a preferência de idioma: {error}",
+      "locale_requires_code": "app.set_locale exige um código de idioma"
+    },
+    "path_required": "Este comando exige um argumento de caminho"
+  },
+  "infra": {
+    "io": "{path}: {error}",
+    "not_a_file": "{path} não é um arquivo",
+    "file_too_large": "{path} tem {size} bytes; o limite atual é {limit} bytes",
+    "invalid_utf8": "{path} não está em UTF-8 válido; a conversão de codificação não está implementada",
+    "write_too_large": "{path} excederia o limite de gravação de {limit} bytes",
+    "not_a_directory": "{path} não é uma pasta"
+  }
+}

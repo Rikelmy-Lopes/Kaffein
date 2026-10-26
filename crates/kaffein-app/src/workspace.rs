@@ -1,3 +1,5 @@
+use kaffein_i18n::{keys, Localizer, Text};
+
 use crate::command::{CommandArgs, CommandOutcome, Enablement};
 use crate::registry::CommandRegistry;
 use crate::services::Services;
@@ -27,13 +29,17 @@ impl Workspace {
         &self.registry
     }
 
+    pub fn localizer(&self) -> &Localizer {
+        &self.services.localizer
+    }
+
     /// The single dispatch path. Every entry point — menu, toolbar, shortcut,
     /// tab, or test — goes through here.
     pub fn dispatch(&mut self, id: &str, args: CommandArgs) -> CommandOutcome {
         let Some(command) = self.registry.get(id) else {
             let outcome = CommandOutcome::failed(
                 crate::command::ErrorKind::Internal,
-                format!("Command '{id}' is not registered"),
+                Text::message(keys::MESSAGE_WORKSPACE_UNREGISTERED).arg("id", id),
             );
             self.record_outcome(&outcome);
             return outcome;
@@ -42,7 +48,7 @@ impl Workspace {
         if command.args.needs_path_prompt() && !matches!(args, CommandArgs::Path(_)) {
             let outcome = CommandOutcome::failed(
                 crate::command::ErrorKind::Internal,
-                format!("Command '{}' requires a path argument", command.id),
+                Text::message(keys::MESSAGE_WORKSPACE_REQUIRES_PATH).arg("id", command.id),
             );
             self.record_outcome(&outcome);
             return outcome;
@@ -57,7 +63,7 @@ impl Workspace {
         self.registry
             .get(id)
             .map(|command| (command.can_execute)(&self.state))
-            .unwrap_or_else(|| Enablement::Disabled("Unknown command"))
+            .unwrap_or(Enablement::Disabled(keys::ENABLEMENT_UNKNOWN_COMMAND))
     }
 
     fn record_outcome(&mut self, outcome: &CommandOutcome) {
@@ -75,14 +81,15 @@ impl Workspace {
                     .set_status(StatusMessage::warning(reason.clone()));
             }
             CommandOutcome::Cancelled => {
-                self.state.set_status(StatusMessage::warning("Cancelled"));
+                self.state
+                    .set_status(StatusMessage::warning(Text::key(keys::COMMON_CANCELLED)));
             }
             CommandOutcome::Failed(error) => {
-                self.state.set_status(StatusMessage::error(format!(
-                    "{}: {}",
-                    error.kind.label(),
-                    error.message
-                )));
+                self.state.set_status(StatusMessage::error(
+                    Text::message(keys::MESSAGE_WORKSPACE_ERROR)
+                        .arg("kind", Text::key(error.kind.key()))
+                        .arg("message", error.message.clone()),
+                ));
             }
         }
     }

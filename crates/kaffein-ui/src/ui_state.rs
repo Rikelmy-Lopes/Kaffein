@@ -1,6 +1,7 @@
 //! Presentation-only state. It is not part of the application model.
 
 use kaffein_app::{AppState, Command, CommandOutcome, ThemePreference};
+use kaffein_i18n::Localizer;
 
 use crate::bottom_panel::BottomTab;
 use crate::editor::EditorBuffer;
@@ -29,7 +30,7 @@ impl UiState {
                 self.prompt = None;
             }
             CommandOutcome::Failed(_) | CommandOutcome::NoOp { .. } => {
-                prompt.error = outcome.message().map(str::to_owned);
+                prompt.error = outcome.message().cloned();
             }
         }
     }
@@ -38,7 +39,12 @@ impl UiState {
         self.prompt.is_some()
     }
 
-    pub(crate) fn open_prompt(&mut self, command: Command, state: &AppState) {
-        self.prompt = Some(PathPrompt::for_command(command, state));
+    pub(crate) fn open_prompt(
+        &mut self,
+        command: Command,
+        state: &AppState,
+        localizer: &Localizer,
+    ) {
+        self.prompt = Some(PathPrompt::for_command(command, state, localizer));
     }
 }

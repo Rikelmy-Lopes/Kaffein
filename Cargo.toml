@@ -4,6 +4,7 @@ members = [
     "crates/kaffein",
     "crates/kaffein-app",
     "crates/kaffein-domain",
+    "crates/kaffein-i18n",
     "crates/kaffein-infra",
     "crates/kaffein-ui",
 ]
@@ -18,6 +19,7 @@ repository = "https://github.com/kaffein/kaffein"
 [workspace.dependencies]
 kaffein-app = { path = "crates/kaffein-app" }
 kaffein-domain = { path = "crates/kaffein-domain" }
+kaffein-i18n = { path = "crates/kaffein-i18n" }
 kaffein-infra = { path = "crates/kaffein-infra" }
 kaffein-ui = { path = "crates/kaffein-ui" }
 

@@ -3,6 +3,8 @@
 //! The UI maps [`Key`] to its own key type; the application layer never names
 //! an egui key.
 
+use kaffein_i18n::{keys, Localizer};
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Key {
     N,
@@ -40,25 +42,25 @@ impl KeyBinding {
         }
     }
 
-    pub fn display(self) -> String {
-        let mut text = String::new();
+    pub fn display(self, localizer: &Localizer) -> String {
+        let mut parts = Vec::with_capacity(3);
         if self.ctrl {
-            text.push_str("Ctrl+");
+            parts.push(localizer.text(keys::KEYBINDING_CTRL));
         }
         if self.shift {
-            text.push_str("Shift+");
+            parts.push(localizer.text(keys::KEYBINDING_SHIFT));
         }
         if self.alt {
-            text.push_str("Alt+");
+            parts.push(localizer.text(keys::KEYBINDING_ALT));
         }
-        text.push(match self.key {
-            Key::N => 'N',
-            Key::O => 'O',
-            Key::S => 'S',
-            Key::Z => 'Z',
-            Key::Y => 'Y',
-            Key::Q => 'Q',
+        parts.push(match self.key {
+            Key::N => "N",
+            Key::O => "O",
+            Key::S => "S",
+            Key::Z => "Z",
+            Key::Y => "Y",
+            Key::Q => "Q",
         });
-        text
+        parts.join("+")
     }
 }

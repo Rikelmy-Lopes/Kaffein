@@ -1,6 +1,7 @@
 //! The bottom tool window with placeholder tabs.
 
 use egui::{Context, Frame, Margin, RichText, Vec2};
+use kaffein_i18n::{keys, Localizer};
 
 use crate::theme::{Theme, SPACE_1, SPACE_2, SPACE_4, SPACE_5, UI_SMALL_FONT_SIZE};
 use crate::ui_state::UiState;
@@ -14,18 +15,31 @@ pub enum BottomTab {
 }
 
 impl BottomTab {
-    fn title(self) -> &'static str {
+    fn title_key(self) -> &'static str {
         match self {
-            Self::Problems => "Problems",
-            Self::Build => "Build",
-            Self::Console => "Console",
+            Self::Problems => keys::BOTTOM_PANEL_TAB_PROBLEMS,
+            Self::Build => keys::BOTTOM_PANEL_TAB_BUILD,
+            Self::Console => keys::BOTTOM_PANEL_TAB_CONSOLE,
+        }
+    }
+
+    fn empty_key(self) -> &'static str {
+        match self {
+            Self::Problems => keys::BOTTOM_PANEL_EMPTY_PROBLEMS,
+            Self::Build => keys::BOTTOM_PANEL_EMPTY_BUILD,
+            Self::Console => keys::BOTTOM_PANEL_EMPTY_CONSOLE,
         }
     }
 
     const ALL: [Self; 3] = [Self::Problems, Self::Build, Self::Console];
 }
 
-pub(crate) fn draw_bottom_panel(ctx: &Context, ui_state: &mut UiState, theme: Theme) {
+pub(crate) fn draw_bottom_panel(
+    ctx: &Context,
+    localizer: &Localizer,
+    ui_state: &mut UiState,
+    theme: Theme,
+) {
     egui::TopBottomPanel::bottom("bottom_tools")
         .resizable(true)
         .default_height(160.0)
@@ -39,7 +53,11 @@ pub(crate) fn draw_bottom_panel(ctx: &Context, ui_state: &mut UiState, theme: Th
                     ui.horizontal(|ui| {
                         ui.spacing_mut().button_padding = Vec2::new(SPACE_4, SPACE_2);
                         for tab in BottomTab::ALL {
-                            ui.selectable_value(&mut ui_state.bottom_tab, tab, tab.title());
+                            ui.selectable_value(
+                                &mut ui_state.bottom_tab,
+                                tab,
+                                localizer.text(tab.title_key()),
+                            );
                         }
                     });
                 });
@@ -50,19 +68,8 @@ pub(crate) fn draw_bottom_panel(ctx: &Context, ui_state: &mut UiState, theme: Th
                 .show(ui, |ui| {
                     ui.set_min_height(ui.available_height());
                     ui.centered_and_justified(|ui| {
-                        let message = match ui_state.bottom_tab {
-                            BottomTab::Problems => {
-                                "No problems. Diagnostics appear once Java analysis is available."
-                            }
-                            BottomTab::Build => {
-                                "Build output will appear here once build integration is implemented."
-                            }
-                            BottomTab::Console => {
-                                "Process output will appear here once run integration is implemented."
-                            }
-                        };
                         ui.label(
-                            RichText::new(message)
+                            RichText::new(localizer.text(ui_state.bottom_tab.empty_key()))
                                 .size(UI_SMALL_FONT_SIZE)
                                 .color(theme.text_muted),
                         );

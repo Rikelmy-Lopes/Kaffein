@@ -64,9 +64,10 @@ Status uses the vocabulary in [`README.md`](README.md): `Verified`, `Implemented
 | Refactoring and code intelligence | `Unknown` | `E0` | M3: at least rename with preview and undo |
 | Version control integration | `Unknown` | `E0` | M3: status, diff, commit as commands |
 | Themes and visual polish | `Partial` | `E1` | `crates/kaffein-ui/src/theme.rs`; `view.toggle_theme` command. Gap: contrast and screenshots not re-measured |
+| Localisation and locale switching | `Implemented` | `E3` | `app.set_locale`; embedded `en`/`pt-BR` catalogs; `every_declared_key_resolves_in_every_bundled_locale`, `switching_a_locale_persists_and_is_restored`, `switching_locale_rerenders_text_captured_before_the_switch`. Gap: Portuguese copy not reviewed by a native speaker; no shipped surface shows a formatted date; plural selection is one/other only |
 | Keyboard and accessibility | `Partial` | `E1` | `crates/kaffein-app/src/registry/catalog.rs` shortcut table (`Ctrl+N/O/S/Z/Y/Q`) dispatches commands. Gap: no palette, focus ring and scale factors unverified |
 | Performance and reliability | `Unknown` | `E0` | Budgeted scenarios defined and measured in [`docs/development.md`](docs/development.md) |
-| Settings, persistence, extensibility | `Unknown` | `E0` | Settings schema, migration, and a decision on plugins |
+| Settings, persistence, extensibility | `Partial` | `E2` | The selected locale persists in `settings.json` with other keys preserved (`crates/kaffein-infra/src/locale_files.rs`). Gap: no settings schema or migration, and no plugin decision |
 | Security posture | `Proposed` | `E0` | [`docs/security.md`](docs/security.md) controls implemented and audited |
 
 An `E0` with status `Proposed` means "designed on paper, nothing built". A status of `Proposed` is
@@ -125,6 +126,8 @@ Decisions that change scope or constraints. Append-only; superseded entries stay
 |---|---|---|---|
 | 2026-10-26 | Documentation uses evidence levels and three separate parity numbers instead of one percentage | A single number hid the difference between "a menu item exists" and "the workflow works" | Adopted |
 | 2026-10-26 | Public parity numbers are withheld until a scope and evidence base exist | An unmeasured percentage is a false claim | Adopted |
+| 2026-10-26 | User-facing text lives in JSON catalogs resolved by `kaffein-i18n`; only English ships | Retrofitting localisation is expensive, and widgets must not own copy; a second locale is a catalog plus a `Locale` variant | Adopted |
+| 2026-10-26 | Locales are dynamic data, not enum variants: `en` and `pt-BR` ship embedded, and external `locales/<code>.json` files add or override languages | Avoids recompiling for every translation and lets the selected locale persist; supersedes the English-only half of the entry above | Adopted |
 | `TBD` | First build system (Gradle or Maven) | Determines the project model and the largest cost driver | Open |
 | `TBD` | Plugin model (if any) | Constrained by the Rust-only principle | Open |
 | `TBD` | Distribution and update channel | Determines signing and security requirements | Open |
@@ -150,6 +153,9 @@ listed because their verification is still missing.
    *Closed by:* status changes in [`docs/security.md`](docs/security.md).
 7. **Verify the M0 gate.** Run the Foundation exit criteria against a real build. *Closed by:* dated
    evidence rows for each criterion and `M0` recorded as verified in this file.
+8. **Review the Portuguese catalog.** Have a native speaker check every entry and the
+   number/date metadata. *Closed by:* a dated review note in
+   [`docs/ui-design.md`](docs/ui-design.md) › Localisation and any corrected catalog entries.
 
 **Last assessed:** 2026-10-26 (foundation shell launched and tests run on Windows; CI and visual
 verification remain outstanding).
@@ -163,4 +169,6 @@ verification remain outstanding).
 | 2026-10-26 | Foundation shell implemented: five-crate workspace, command registry/dispatch/undo, editor with tabs, project tree, design tokens, and status bar. Stage remains Foundation, not verified | `cargo test --workspace` (35 passed) and `kaffein.exe` launch on Windows; see [`docs/development.md`](docs/development.md) › Verified facts |
 | 2026-10-26 | Added `file.new` (`Ctrl+N`): a new document is created in memory, stays dirty until its first save, and is refused when the path already exists | `workspace::tests::creating_a_file_adds_a_dirty_document_without_writing`, `saving_a_new_document_writes_it_and_clears_dirty_state`, `creating_a_file_that_already_exists_is_refused` |
 | 2026-10-26 | Split the workspace into modules by responsibility: `command/`, `commands/`, `registry/`, per-surface UI modules, and `tests/` folders. No behaviour change; every source file is under the 300-line budget | `cargo test --workspace` (39 passed); [`docs/architecture.md`](docs/architecture.md) › Module layout |
+| 2026-10-26 | Added `kaffein-i18n` and moved all user-facing text into an English JSON catalog; commands, UI surfaces, and infrastructure errors now resolve keys instead of embedding copy | `cargo test --workspace` (43 passed); [`docs/architecture.md`](docs/architecture.md) › Localisation; [`docs/development.md`](docs/development.md) › Verified facts |
+| 2026-10-26 | Dynamic localisation completed: embedded `en`/`pt-BR` catalogs, external catalog loading and locale persistence, deferred `Text` that re-renders existing messages, number/date formatting, and a View › Language selector backed by `app.set_locale` | `cargo test --workspace` (59 passed); `cargo clippy --workspace --all-targets --all-features -- -D warnings`; [`docs/architecture.md`](docs/architecture.md) › Localisation |
 

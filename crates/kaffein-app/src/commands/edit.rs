@@ -1,5 +1,7 @@
 //! Edit commands: undo, redo, and the editor's internal text commands.
 
+use kaffein_i18n::{keys, Text};
+
 use crate::command::{CommandArgs, CommandOutcome, ErrorKind};
 use crate::services::Services;
 use crate::state::AppState;
@@ -12,15 +14,15 @@ pub(crate) fn edit_undo(
     _args: CommandArgs,
 ) -> CommandOutcome {
     let Some(id) = state.active_id() else {
-        return CommandOutcome::no_op("No document is open");
+        return CommandOutcome::no_op(Text::key(keys::MESSAGE_EDIT_NO_DOCUMENT));
     };
     let Some(document) = state.document_mut(id) else {
-        return CommandOutcome::no_op("No document is open");
+        return CommandOutcome::no_op(Text::key(keys::MESSAGE_EDIT_NO_DOCUMENT));
     };
     if document.undo() {
         CommandOutcome::success_silent()
     } else {
-        CommandOutcome::no_op("Nothing to undo")
+        CommandOutcome::no_op(Text::key(keys::MESSAGE_EDIT_NOTHING_TO_UNDO))
     }
 }
 
@@ -30,15 +32,15 @@ pub(crate) fn edit_redo(
     _args: CommandArgs,
 ) -> CommandOutcome {
     let Some(id) = state.active_id() else {
-        return CommandOutcome::no_op("No document is open");
+        return CommandOutcome::no_op(Text::key(keys::MESSAGE_EDIT_NO_DOCUMENT));
     };
     let Some(document) = state.document_mut(id) else {
-        return CommandOutcome::no_op("No document is open");
+        return CommandOutcome::no_op(Text::key(keys::MESSAGE_EDIT_NO_DOCUMENT));
     };
     if document.redo() {
         CommandOutcome::success_silent()
     } else {
-        CommandOutcome::no_op("Nothing to redo")
+        CommandOutcome::no_op(Text::key(keys::MESSAGE_EDIT_NOTHING_TO_REDO))
     }
 }
 
@@ -53,13 +55,13 @@ pub(crate) fn editor_replace_text(
         at_ms,
     } = args
     else {
-        return internal_error("editor.replace_text requires text arguments");
+        return internal_error(Text::key(keys::MESSAGE_EDIT_REPLACE_REQUIRES_TEXT));
     };
 
     let Some(target) = state.document_mut(document) else {
         return CommandOutcome::failed(
             ErrorKind::UnsupportedState,
-            "The document is no longer open",
+            Text::key(keys::MESSAGE_EDIT_DOCUMENT_GONE),
         );
     };
 
@@ -73,14 +75,14 @@ pub(crate) fn editor_activate(
     args: CommandArgs,
 ) -> CommandOutcome {
     let CommandArgs::Document(id) = args else {
-        return internal_error("editor.activate requires a document argument");
+        return internal_error(Text::key(keys::MESSAGE_EDIT_ACTIVATE_REQUIRES_DOCUMENT));
     };
     if state.activate(id) {
         CommandOutcome::success_silent()
     } else {
         CommandOutcome::failed(
             ErrorKind::UnsupportedState,
-            "The document is no longer open",
+            Text::key(keys::MESSAGE_EDIT_DOCUMENT_GONE),
         )
     }
 }

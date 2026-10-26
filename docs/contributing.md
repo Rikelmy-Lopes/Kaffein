@@ -40,6 +40,8 @@ convenience.
 - No circular dependencies, and no upward dependencies (infrastructure must not know about UI).
 - Do not introduce abstractions, dependencies, or modules without a concrete need.
 - Keep egui types out of domain APIs.
+- User-facing text goes through `kaffein-i18n`; add the key constant and every bundled catalog entry
+  in the same change instead of embedding a literal or falling back to English-only text.
 
 ### Code organisation
 
@@ -101,6 +103,11 @@ documentation gap.
 | `epaint_default_fonts` 0.29.1 (bundled UI fonts) | (MIT OR Apache-2.0) AND OFL-1.1 AND LicenseRef-UFL-1.0 | `cargo metadata`; used unmodified through `eframe`'s `default_fonts` feature | `Verified` (2026-10-26) |
 | `glow` 0.14.2 | MIT OR Apache-2.0 OR Zlib | `cargo metadata` | `Verified` (2026-10-26) |
 | `winit` 0.30.13 | Apache-2.0 | `cargo metadata` | `Verified` (2026-10-26) |
+| `serde_json` 1.0.154 | MIT OR Apache-2.0 | `cargo metadata`; direct dependency of `kaffein-i18n` and `kaffein-infra` for JSON catalogs and settings | `Verified` (2026-10-26) |
+| `serde` / `serde_core` 1.0.229 | MIT OR Apache-2.0 | `cargo metadata`; JSON serialization support | `Verified` (2026-10-26) |
+| `itoa` 1.0.18 | MIT OR Apache-2.0 | `cargo metadata`; `serde_json` transient | `Verified` (2026-10-26) |
+| `zmij` 1.0.23 | MIT | `cargo metadata`; `serde_json` transient | `Verified` (2026-10-26) |
+| `memchr` 2.8.3 | Unlicense OR MIT | `cargo metadata`; transient | `Verified` (2026-10-26) |
 
 No IntelliJ icons, fonts, layouts, translations, or source files are vendored. The complete
 transitive licence set is available from `cargo metadata --format-version 1`; re-run it when a
@@ -115,8 +122,8 @@ dependency is added and update this table.
 3. **Choose the layer.** Domain behaviour belongs in the domain; orchestration in the application
    layer; filesystem/process access in infrastructure.
 4. **Implement in Rust.** No behaviour hidden in a script, shell command, or build step.
-5. **Register it.** Add the identifier, title, category, default shortcut (if any), enablement
-   predicate, and argument schema to the single table in
+5. **Register it.** Add the identifier, localised title key, category key, default shortcut (if
+   any), enablement predicate, and argument schema to the single table in
    `crates/kaffein-app/src/registry/catalog.rs`.
 6. **Wire every entry point.** Menu, context menu, toolbar, palette, keybinding — all dispatch the
    same command. Do not add per-widget implementations.
@@ -134,6 +141,7 @@ dependency is added and update this table.
 ## Checklist: UI change
 
 - [ ] Uses shared tokens from [`ui-design.md`](ui-design.md); no new hard-coded colours or sizes.
+- [ ] All user-facing copy resolves through the localisation catalog; no English literals in widgets.
 - [ ] Keyboard reachable, with a visible focus ring and a sensible tab order.
 - [ ] Shortcut (if any) is registered as a command, not a local key handler.
 - [ ] Disabled, hover, active, focus, and selected states are all defined.

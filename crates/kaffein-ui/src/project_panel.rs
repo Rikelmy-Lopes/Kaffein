@@ -5,6 +5,7 @@ use egui::{
 };
 use kaffein_app::{command_id, display_path, AppState, CommandArgs, CommandRegistry};
 use kaffein_domain::ProjectEntry;
+use kaffein_i18n::{keys, Localizer};
 
 use crate::actions::{trigger, UiAction};
 use crate::theme::{Theme, SPACE_2, SPACE_3, SPACE_4, SPACE_5, UI_SMALL_FONT_SIZE};
@@ -14,6 +15,7 @@ pub(crate) fn draw_project_panel(
     ctx: &Context,
     state: &AppState,
     registry: &CommandRegistry,
+    localizer: &Localizer,
     ui_state: &mut UiState,
     actions: &mut Vec<UiAction>,
     theme: Theme,
@@ -31,7 +33,7 @@ pub(crate) fn draw_project_panel(
         .show(ctx, |ui| {
             ui.horizontal(|ui| {
                 ui.label(
-                    RichText::new("PROJECT")
+                    RichText::new(localizer.text(keys::PROJECT_PANEL_HEADER))
                         .size(UI_SMALL_FONT_SIZE)
                         .color(theme.text_muted)
                         .strong(),
@@ -39,11 +41,11 @@ pub(crate) fn draw_project_panel(
                 ui.with_layout(Layout::right_to_left(Align::Center), |ui| {
                     if let Some(command) = registry.get(command_id::PROJECT_OPEN) {
                         if ui
-                            .small_button("Open…")
-                            .on_hover_text("Open a project folder")
+                            .small_button(localizer.text(keys::PROJECT_PANEL_OPEN))
+                            .on_hover_text(localizer.text(keys::PROJECT_PANEL_OPEN_TOOLTIP))
                             .clicked()
                         {
-                            trigger(command, state, ui_state, actions);
+                            trigger(command, state, localizer, ui_state, actions);
                         }
                     }
                 });
@@ -53,14 +55,17 @@ pub(crate) fn draw_project_panel(
             let Some(project) = state.project() else {
                 ui.add_space(SPACE_5);
                 ui.label(
-                    RichText::new("No project open")
+                    RichText::new(localizer.text(keys::PROJECT_PANEL_EMPTY))
                         .color(theme.text_muted)
                         .size(UI_SMALL_FONT_SIZE),
                 );
                 ui.add_space(SPACE_2);
                 if let Some(command) = registry.get(command_id::PROJECT_OPEN) {
-                    if ui.button("Open Project…").clicked() {
-                        trigger(command, state, ui_state, actions);
+                    if ui
+                        .button(localizer.text(keys::PROJECT_PANEL_OPEN_PROJECT))
+                        .clicked()
+                    {
+                        trigger(command, state, localizer, ui_state, actions);
                     }
                 }
                 return;

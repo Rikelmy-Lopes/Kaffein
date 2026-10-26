@@ -2,6 +2,7 @@
 
 use egui::{Context, Key, KeyboardShortcut, Modifiers};
 use kaffein_app::{AppState, Command, CommandArgs, CommandRegistry};
+use kaffein_i18n::Localizer;
 
 use crate::ui_state::UiState;
 
@@ -16,6 +17,7 @@ pub(crate) fn handle_shortcuts(
     ctx: &Context,
     state: &AppState,
     registry: &CommandRegistry,
+    localizer: &Localizer,
     ui_state: &mut UiState,
     actions: &mut Vec<UiAction>,
 ) {
@@ -41,7 +43,7 @@ pub(crate) fn handle_shortcuts(
         });
 
         if matched {
-            trigger(command, state, ui_state, actions);
+            trigger(command, state, localizer, ui_state, actions);
         }
     }
 }
@@ -61,11 +63,12 @@ fn egui_key(key: kaffein_app::Key) -> Key {
 pub(crate) fn trigger(
     command: Command,
     state: &AppState,
+    localizer: &Localizer,
     ui_state: &mut UiState,
     actions: &mut Vec<UiAction>,
 ) {
     if command.args.needs_path_prompt() {
-        ui_state.open_prompt(command, state);
+        ui_state.open_prompt(command, state, localizer);
     } else {
         actions.push(UiAction {
             command: command.id,

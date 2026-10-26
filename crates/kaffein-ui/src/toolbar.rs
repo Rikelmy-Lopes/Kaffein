@@ -2,6 +2,7 @@
 
 use egui::{Button, Context, Frame, Margin, Vec2};
 use kaffein_app::{AppState, CommandRegistry, Enablement};
+use kaffein_i18n::Localizer;
 
 use crate::actions::{trigger, UiAction};
 use crate::theme::{Theme, ROW_COMPACT, ROW_STANDARD, SPACE_2, SPACE_3, SPACE_4};
@@ -11,6 +12,7 @@ pub(crate) fn draw_toolbar(
     ctx: &Context,
     state: &AppState,
     registry: &CommandRegistry,
+    localizer: &Localizer,
     ui_state: &mut UiState,
     actions: &mut Vec<UiAction>,
     theme: Theme,
@@ -32,20 +34,22 @@ pub(crate) fn draw_toolbar(
                     let enablement = command.enablement(state);
                     let response = ui.add_enabled(
                         enablement.is_enabled(),
-                        Button::new(placement.label).min_size(Vec2::new(0.0, ROW_COMPACT)),
+                        Button::new(localizer.text(placement.label_key))
+                            .min_size(Vec2::new(0.0, ROW_COMPACT)),
                     );
+                    let title = command.title(localizer);
                     let tooltip = match command.primary_shortcut() {
-                        Some(shortcut) => {
-                            format!("{}\n{}", command.title, shortcut.display())
-                        }
-                        None => command.title.to_owned(),
+                        Some(shortcut) => format!("{title}\n{}", shortcut.display(localizer)),
+                        None => title.to_owned(),
                     };
                     let response = match enablement {
-                        Enablement::Disabled(reason) => response.on_disabled_hover_text(reason),
+                        Enablement::Disabled(reason) => {
+                            response.on_disabled_hover_text(localizer.text(reason))
+                        }
                         Enablement::Enabled => response.on_hover_text(tooltip),
                     };
                     if response.clicked() {
-                        trigger(command, state, ui_state, actions);
+                        trigger(command, state, localizer, ui_state, actions);
                     }
                 }
             });

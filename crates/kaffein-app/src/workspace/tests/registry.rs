@@ -1,5 +1,7 @@
 //! Registry consistency tests.
 
+use kaffein_i18n::Localizer;
+
 use crate::command::Menu;
 use crate::registry::CommandRegistry;
 
@@ -18,7 +20,29 @@ fn registry_ids_are_unique_and_namespaced() {
             "duplicate command id '{}'",
             command.id
         );
-        assert!(!command.title.is_empty());
+    }
+}
+
+#[test]
+fn every_command_title_and_category_resolves_in_every_locale() {
+    let registry = CommandRegistry::new();
+    let mut localizer = Localizer::bundled();
+    for locale in localizer.available_locales() {
+        localizer.set_locale(locale.code()).expect("bundled locale");
+        for command in registry.commands() {
+            assert!(
+                !command.title(&localizer).is_empty(),
+                "missing title for '{}' in '{}'",
+                command.id,
+                locale.code()
+            );
+            assert!(
+                !command.category(&localizer).is_empty(),
+                "missing category for '{}' in '{}'",
+                command.id,
+                locale.code()
+            );
+        }
     }
 }
 

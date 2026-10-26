@@ -9,3 +9,4 @@ repository.workspace = true
 
 [dependencies]
 kaffein-domain.workspace = true
+kaffein-i18n.workspace = true
