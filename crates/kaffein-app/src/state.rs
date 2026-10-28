@@ -1,3 +1,12 @@
+//! Application state read by the UI.
+
+mod run;
+
+pub use run::RunState;
+pub(crate) use run::{lock_run, RunJob};
+
+use std::sync::{Arc, Mutex};
+
 use kaffein_domain::{Document, DocumentId, ProjectTree};
 use kaffein_i18n::{keys, Text};
 
@@ -66,6 +75,8 @@ pub struct AppState {
     show_bottom_panel: bool,
     quit_requested: bool,
     next_document_id: u64,
+    run: Arc<Mutex<Arc<RunState>>>,
+    next_run_id: u64,
 }
 
 impl AppState {
@@ -80,6 +91,8 @@ impl AppState {
             show_bottom_panel: true,
             quit_requested: false,
             next_document_id: 1,
+            run: Arc::new(Mutex::new(Arc::new(RunState::Idle))),
+            next_run_id: 0,
         }
     }
 
@@ -114,7 +127,32 @@ impl AppState {
     pub fn find_document_by_path(&self, path: &std::path::Path) -> Option<&Document> {
         self.documents
             .iter()
-            .find(|document| document.path() == path)
+            .find(|document| document.path() == Some(path))
+    }
+
+    /// A snapshot of the current run. The snapshot is shared behind `Arc`, so
+    /// cloning it for the UI does not copy captured output.
+    pub fn run_state(&self) -> Arc<RunState> {
+        lock_run(&self.run).clone()
+    }
+
+    /// Starts a run unless one is already in progress. The caller moves the
+    /// returned job to a worker thread and calls [`RunJob::finish`].
+    pub(crate) fn start_run(&mut self, source_name: String) -> Option<RunJob> {
+        let id = self.next_run_id + 1;
+        let slot = self.run.clone();
+        {
+            let mut state = lock_run(&slot);
+            if state.is_running() {
+                return None;
+            }
+            *state = Arc::new(RunState::Running {
+                id,
+                source_name: source_name.clone(),
+            });
+        }
+        self.next_run_id = id;
+        Some(RunJob::new(id, source_name, slot))
     }
 
     pub fn active_id(&self) -> Option<DocumentId> {
@@ -221,7 +259,7 @@ impl AppState {
     pub fn dirty_document_count(&self) -> usize {
         self.documents
             .iter()
-            .filter(|document| document.is_dirty())
+            .filter(|document| document.is_dirty() && !document.is_scratch())
             .count()
     }
 

@@ -7,6 +7,7 @@ pub enum Menu {
     File,
     Edit,
     View,
+    Run,
 }
 
 impl Menu {
@@ -15,10 +16,11 @@ impl Menu {
             Self::File => keys::MENU_FILE,
             Self::Edit => keys::MENU_EDIT,
             Self::View => keys::MENU_VIEW,
+            Self::Run => keys::MENU_RUN,
         }
     }
 
-    pub const ALL: [Menu; 3] = [Self::File, Self::Edit, Self::View];
+    pub const ALL: [Menu; 4] = [Self::File, Self::Edit, Self::View, Self::Run];
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]

@@ -1,10 +1,13 @@
 //! eframe adapter: owns the workspace, draws a frame, and dispatches the
 //! actions the UI emitted.
 
+use std::sync::Arc;
+use std::time::Duration;
+
 use eframe::egui;
 use kaffein_app::{command_id, CommandArgs, Services, ThemePreference, Workspace};
 use kaffein_i18n::Localizer;
-use kaffein_infra::{FsProjectLoader, StdFileSystem};
+use kaffein_infra::{FsProjectLoader, StdFileSystem, StdJavaRunner};
 use kaffein_ui::UiState;
 
 pub(crate) struct KaffeinApp {
@@ -19,10 +22,13 @@ impl KaffeinApp {
         let services = Services::new(
             Box::new(StdFileSystem::new()),
             Box::new(FsProjectLoader::new()),
+            Arc::new(StdJavaRunner::new()),
             localizer,
         );
+        let mut workspace = Workspace::new(services, ThemePreference::Dark);
+        workspace.dispatch(command_id::FILE_NEW_SCRATCH, CommandArgs::None);
         Self {
-            workspace: Workspace::new(services, ThemePreference::Dark),
+            workspace,
             ui_state: UiState::default(),
             title_locale,
         }
@@ -50,7 +56,11 @@ impl eframe::App for KaffeinApp {
             &mut self.ui_state,
         );
 
+        let mut started_run = false;
         for action in actions {
+            if action.command == command_id::RUN_EXECUTE {
+                started_run = true;
+            }
             let outcome = self.workspace.dispatch(action.command, action.args);
             self.ui_state.after_dispatch(action.command, &outcome);
         }
@@ -59,6 +69,14 @@ impl eframe::App for KaffeinApp {
 
         if self.workspace.state().quit_requested() {
             ctx.send_viewport_cmd(egui::ViewportCommand::Close);
+        }
+
+        if started_run {
+            // A fast failure (for example a missing `javac`) can finish before
+            // this frame ends, so make sure the console is drawn at least once.
+            ctx.request_repaint();
+        } else if self.workspace.state().run_state().is_running() {
+            ctx.request_repaint_after(Duration::from_millis(100));
         }
     }
 }

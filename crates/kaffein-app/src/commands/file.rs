@@ -9,6 +9,16 @@ use crate::state::AppState;
 
 use super::helpers::{fs_error_text, path_from_args, target_document, user_error};
 
+pub(crate) fn file_new_scratch(
+    state: &mut AppState,
+    _services: &mut Services,
+    _args: CommandArgs,
+) -> CommandOutcome {
+    let id = state.allocate_document_id();
+    state.add_document(Document::scratch(id, crate::DEFAULT_JAVA_SOURCE));
+    CommandOutcome::success_silent()
+}
+
 pub(crate) fn file_new(
     state: &mut AppState,
     services: &mut Services,
@@ -111,11 +121,16 @@ pub(crate) fn file_save(
     let Some(document) = state.document(id) else {
         return CommandOutcome::no_op(Text::key(keys::MESSAGE_FILE_NO_DOCUMENT));
     };
+    if document.is_scratch() {
+        return CommandOutcome::no_op(Text::key(keys::MESSAGE_FILE_SCRATCH_SAVE));
+    }
     if !document.is_dirty() {
         return CommandOutcome::no_op(Text::key(keys::MESSAGE_FILE_NO_CHANGES));
     }
 
-    let path = document.path().to_path_buf();
+    let Some(path) = document.path().map(std::path::Path::to_path_buf) else {
+        return CommandOutcome::no_op(Text::key(keys::MESSAGE_FILE_SCRATCH_SAVE));
+    };
     let name = document.display_name();
     let text = document.text_for_save();
 
@@ -144,7 +159,7 @@ pub(crate) fn file_close(
         return CommandOutcome::no_op(Text::key(keys::MESSAGE_FILE_DOCUMENT_GONE));
     };
 
-    if document.is_dirty() {
+    if !document.is_scratch() && document.is_dirty() {
         return CommandOutcome::no_op(
             Text::message(keys::MESSAGE_FILE_UNSAVED_CHANGES).arg("name", document.display_name()),
         );

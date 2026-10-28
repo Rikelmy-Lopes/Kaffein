@@ -20,16 +20,18 @@ pub mod services;
 pub mod state;
 pub mod workspace;
 
+mod defaults;
 mod paths;
 
 pub use command::{
     command_id, ArgKind, Command, CommandArgs, CommandError, CommandOutcome, Enablement, ErrorKind,
     Key, KeyBinding, Menu, MenuPlacement, ToolbarPlacement,
 };
+pub use defaults::DEFAULT_JAVA_SOURCE;
 pub use paths::display_path;
 pub use registry::CommandRegistry;
 pub use services::Services;
-pub use state::{AppState, MessageSeverity, StatusMessage, ThemePreference};
+pub use state::{AppState, MessageSeverity, RunState, StatusMessage, ThemePreference};
 pub use workspace::Workspace;
 
 /// Stable identifiers for every command. The strings are the contract used by

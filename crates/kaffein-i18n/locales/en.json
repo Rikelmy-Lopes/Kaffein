@@ -16,6 +16,7 @@
     "file": "File",
     "edit": "Edit",
     "view": "View",
+    "run": "Run",
     "language": "Language"
   },
   "category": {
@@ -23,6 +24,7 @@
     "file": "File",
     "edit": "Edit",
     "view": "View",
+    "run": "Run",
     "application": "Application",
     "editor": "Editor"
   },
@@ -37,6 +39,9 @@
       "new": {
         "title": "New File…"
       },
+      "new_scratch": {
+        "title": "New Scratch File"
+      },
       "open": {
         "title": "Open File…",
         "toolbar": "Open"
@@ -47,6 +52,12 @@
       },
       "close": {
         "title": "Close File"
+      }
+    },
+    "run": {
+      "execute": {
+        "title": "Run Current File",
+        "toolbar": "Run"
       }
     },
     "edit": {
@@ -125,7 +136,20 @@
     "empty": {
       "problems": "No problems. Diagnostics appear once Java analysis is available.",
       "build": "Build output will appear here once build integration is implemented.",
-      "console": "Process output will appear here once run integration is implemented."
+      "console": "Run the current Java file to see its output."
+    },
+    "console": {
+      "running": "Running {name}…",
+      "compile_failed": "Compilation failed (exit code {code}).",
+      "compile_timed_out": "Compilation timed out.",
+      "run_finished": "Run finished (exit code 0).",
+      "run_exit": "Run exited with code {code}.",
+      "run_timed_out": "Run timed out and was stopped.",
+      "run_failed": "Run failed: {error}",
+      "stdout": "Standard output",
+      "stderr": "Standard error",
+      "no_output": "The program produced no output.",
+      "truncated": "Output was truncated at the capture limit."
     }
   },
   "prompt": {
@@ -166,7 +190,9 @@
     "no_document": "No document is open",
     "nothing_to_undo": "Nothing to undo",
     "nothing_to_redo": "Nothing to redo",
-    "unknown_command": "Unknown command"
+    "unknown_command": "Unknown command",
+    "not_java": "Open a Java file to run",
+    "run_in_progress": "A Java run is already in progress"
   },
   "message": {
     "workspace": {
@@ -190,7 +216,14 @@
       "saved": "Saved {name}",
       "document_gone": "Document is no longer open",
       "unsaved_changes": "{name} has unsaved changes. Save it before closing.",
-      "closed": "Closed {name}"
+      "closed": "Closed {name}",
+      "scratch_save": "Scratch files are not written to disk. Use File › New File… to create a file."
+    },
+    "run": {
+      "no_document": "No document is open",
+      "not_java": "The active document is not a Java file",
+      "empty": "There is no Java code to run",
+      "already_running": "A Java run is already in progress"
     },
     "project": {
       "enter_path": "Enter a project folder path.",

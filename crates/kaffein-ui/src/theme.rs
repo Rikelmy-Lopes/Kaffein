@@ -5,6 +5,8 @@
 use egui::{Color32, FontFamily, FontId, Margin, Rounding, Shadow, Stroke, TextStyle, Vec2};
 use kaffein_app::MessageSeverity;
 
+pub use crate::syntax::SyntaxTheme;
+
 /// Spacing scale from the design document.
 pub const SPACE_1: f32 = 2.0;
 pub const SPACE_2: f32 = 4.0;
@@ -54,6 +56,7 @@ pub struct Theme {
     pub info: Color32,
     pub diff_added: Color32,
     pub diff_removed: Color32,
+    pub syntax: SyntaxTheme,
 }
 
 impl Theme {
@@ -82,6 +85,7 @@ impl Theme {
             info: rgb(0x6B, 0xA6, 0xFF),
             diff_added: rgb(0x1F, 0x3A, 0x2B),
             diff_removed: rgb(0x45, 0x26, 0x2B),
+            syntax: SyntaxTheme::dark(),
         }
     }
 
@@ -110,6 +114,7 @@ impl Theme {
             info: rgb(0x1D, 0x4E, 0xD8),
             diff_added: rgb(0xE6, 0xFF, 0xEC),
             diff_removed: rgb(0xFF, 0xEB, 0xE9),
+            syntax: SyntaxTheme::light(),
         }
     }
 

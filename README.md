@@ -18,10 +18,11 @@ implementation.
 ## Repository scope
 
 This repository holds the **Rust workspace** and the **documentation** for the IDE. The workspace
-currently contains a foundation shell: a window, menu/toolbar, project tree, editor tabs, a plain-text
-editor, bottom tool window tabs, a status bar, design tokens, and a command registry with dispatch
-and undo. Everything documented elsewhere remains design intent until a test, a launch trace, or a
-dated measurement demonstrates it.
+currently contains a foundation shell: a window, menu/toolbar, project tree, editor tabs, an editor with
+Java syntax highlighting, an editable in-memory Java scratch document, a **Run** command that compiles
+and executes the active buffer through the JDK, bottom tool window tabs with a run console, a status
+bar, design tokens, and a command registry with dispatch and undo. Everything documented elsewhere
+remains design intent until a test, a launch trace, or a dated measurement demonstrates it.
 
 The status rules still apply:
 

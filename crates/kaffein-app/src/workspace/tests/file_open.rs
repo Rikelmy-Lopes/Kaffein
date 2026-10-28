@@ -1,6 +1,6 @@
 //! Open and new-file dispatch tests.
 
-use std::path::PathBuf;
+use std::path::Path;
 
 use crate::command::{command_id, CommandArgs, CommandOutcome, ErrorKind};
 
@@ -41,7 +41,7 @@ fn creating_a_file_adds_a_dirty_document_without_writing() {
         .state()
         .active_document()
         .expect("active document");
-    assert_eq!(document.path(), PathBuf::from("C:/project/New.java"));
+    assert_eq!(document.path(), Some(Path::new("C:/project/New.java")));
     assert_eq!(document.buffer(), "");
     assert!(document.is_dirty());
     assert!(disk.lock().expect("fake disk").files.is_empty());

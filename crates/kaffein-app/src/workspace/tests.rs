@@ -8,4 +8,5 @@ mod file_save;
 mod locale;
 mod project;
 mod registry;
+mod run;
 mod support;

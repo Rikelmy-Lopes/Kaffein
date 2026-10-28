@@ -5,11 +5,19 @@
 //! structured outcomes. A command-specific helper belongs in the module that
 //! owns the command.
 
-use kaffein_domain::{FsError, FsErrorKind};
+use kaffein_domain::{Document, FsError, FsErrorKind};
 use kaffein_i18n::{keys, Text};
 
 use crate::command::{CommandArgs, CommandOutcome, ErrorKind};
 use crate::state::AppState;
+
+pub(crate) fn is_java_document(document: &Document) -> bool {
+    document.path().is_none()
+        || document
+            .path()
+            .and_then(std::path::Path::extension)
+            .is_some_and(|extension| extension.to_string_lossy().eq_ignore_ascii_case("java"))
+}
 
 pub(crate) fn target_document(
     state: &AppState,

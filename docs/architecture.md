@@ -85,12 +85,12 @@ topological order, with the evidence that the row is accurate.
 
 | Crate / package | Responsibility | Depends on | Status | Evidence |
 |---|---|---|---|---|
-| `kaffein-domain` | Documents, project tree data, and the ports infrastructure implements | standard library only | `Implemented` | `crates/kaffein-domain/src/lib.rs`; `cargo tree --depth 1 -p kaffein-domain` (2026-10-26) |
+| `kaffein-domain` | Documents, project tree data, Java lexical/semantic analysis, and the ports infrastructure implements | standard library only | `Implemented` | `crates/kaffein-domain/src/lib.rs`, `java/`; `cargo tree --depth 1 -p kaffein-domain` (2026-10-28) |
 | `kaffein-i18n` | Locale catalogs, deferred user-facing text, fallback, and culture-specific formatting | standard library, `serde_json 1.0.154` | `Implemented` | `crates/kaffein-i18n/src/`, `locales/`; `cargo tree --depth 1 -p kaffein-i18n` (2026-10-26) |
-| `kaffein-app` | Command registry, single dispatch path, application state, undo orchestration | `kaffein-domain`, `kaffein-i18n` | `Implemented` | `crates/kaffein-app/src/registry/`, `workspace.rs`; `cargo tree --depth 1 -p kaffein-app` (2026-10-26) |
-| `kaffein-infra` | Filesystem adapter (UTF-8, size limit), project scanner, and external locale storage | `kaffein-domain`, `kaffein-i18n`, `serde_json 1.0.154` | `Implemented` | `crates/kaffein-infra/src/filesystem.rs`, `project_loader.rs`, `locale_files.rs`; `cargo tree --depth 1 -p kaffein-infra` (2026-10-26) |
-| `kaffein-ui` | egui views, layout, design tokens; emits commands instead of mutating state | `kaffein-app`, `kaffein-domain`, `kaffein-i18n`, `egui 0.29.1` | `Implemented` | `crates/kaffein-ui/src/lib.rs`, `editor.rs`, `theme.rs`; `cargo tree --depth 1 -p kaffein-ui` (2026-10-26) |
-| `kaffein` | Desktop binary; constructs infrastructure and wires it into the workspace | `kaffein-app`, `kaffein-i18n`, `kaffein-infra`, `kaffein-ui`, `eframe`/`egui` | `Implemented` | `crates/kaffein/src/main.rs`, `app.rs`; `cargo metadata --no-deps --format-version 1` (2026-10-26) |
+| `kaffein-app` | Command registry, single dispatch path, application state, undo orchestration, and Java-run job state | `kaffein-domain`, `kaffein-i18n` | `Implemented` | `crates/kaffein-app/src/registry/`, `workspace.rs`, `state/run.rs`; `cargo tree --depth 1 -p kaffein-app` (2026-10-28) |
+| `kaffein-infra` | Filesystem adapter (UTF-8, size limit), project scanner, external locale storage, and the JDK compile/run adapter | `kaffein-domain`, `kaffein-i18n`, `serde_json 1.0.154` | `Implemented` | `crates/kaffein-infra/src/filesystem.rs`, `project_loader.rs`, `locale_files.rs`, `java_runner.rs`; `cargo tree --depth 1 -p kaffein-infra` (2026-10-28) |
+| `kaffein-ui` | egui views, layout, design tokens, and Java syntax layout; emits commands instead of mutating state | `kaffein-app`, `kaffein-domain`, `kaffein-i18n`, `egui 0.29.1` | `Implemented` | `crates/kaffein-ui/src/lib.rs`, `editor.rs`, `syntax/`, `theme.rs`; `cargo tree --depth 1 -p kaffein-ui` (2026-10-28) |
+| `kaffein` | Desktop binary; constructs infrastructure and wires it into the workspace | `kaffein-app`, `kaffein-i18n`, `kaffein-infra`, `kaffein-ui`, `eframe`/`egui` | `Implemented` | `crates/kaffein/src/main.rs`, `app.rs`; `cargo metadata --no-deps --format-version 1` (2026-10-28) |
 
 Update this table when crates are added, removed, or change responsibility. If a crate's
 responsibility cannot be stated in one sentence, that is an architecture signal, not a table
@@ -124,17 +124,17 @@ Rules:
 - **No hidden wiring.** Every module is declared exactly once, from its crate root or its owning
   module. Do not compile code through `#[path]` tricks.
 
-Current layout, measured 2026-10-26 with the command in
+Current layout, measured 2026-10-28 with the command in
 [`development.md`](development.md) › File budget check:
 
 | Crate | Modules | Largest file | Status |
 |---|---|---|---|
-| `kaffein-domain` | `document/` (model, `line_ending`, tests), `project.rs`, `ports.rs` | `document.rs` — 218 lines | `Implemented` |
+| `kaffein-domain` | `document/` (model, `line_ending`, tests), `java/` (lexical analysis, semantic classification, source identity, token kinds, tests), `project.rs`, `ports.rs` (including the Java runner port) | `java/lexer/scan.rs` — 280 lines; `document.rs` — 252 lines | `Implemented` |
 | `kaffein-i18n` | `lib.rs` (wiring), `keys.rs` (stable key table), `locale.rs` (language tags), `catalog.rs` (JSON and metadata parsing), `localizer.rs` (active/fallback lookup, switching, formatting), `source.rs` (external catalog seam), `text.rs` (deferred text), `format.rs` (numbers and dates), `tests.rs`; `locales/en.json`, `locales/pt-BR.json` | `localizer.rs` - 253 lines | `Implemented` |
-| `kaffein-app` | `command/` (`command_id`, `args`, `outcome`, `keys`, `placement`), `commands/` (`file`, `edit`, `project`, `view`, `app`, `helpers`), `registry/` (`catalog`, `enablers`), `state.rs`, `services.rs`, `paths.rs`, `workspace.rs` + `workspace/tests/` | `registry/catalog.rs` - 258 lines | `Implemented` |
-| `kaffein-infra` | `filesystem.rs`, `project_loader.rs`, `locale_files.rs`, `test_support.rs` | `locale_files.rs` - 189 lines | `Implemented` |
-| `kaffein-ui` | `lib.rs` (frame wiring), `actions.rs`, `editor.rs`, `menu.rs`, `toolbar.rs`, `status_bar.rs`, `project_panel.rs`, `bottom_panel.rs`, `path_prompt.rs`, `ui_state.rs`, `theme.rs`, `tests.rs` | `theme.rs` - 233 lines | `Implemented` |
-| `kaffein` | `main.rs` (entry point), `app.rs` (eframe adapter) | `app.rs` - 82 lines | `Implemented` |
+| `kaffein-app` | `command/` (`command_id`, `args`, `outcome`, `keys`, `placement`), `commands/` (`file`, `edit`, `project`, `run`, `view`, `app`, `helpers`), `registry/` (`catalog`, `enablers`), `state/` (`state`, `run`), `services.rs`, `defaults.rs`, `paths.rs`, `workspace.rs` + `workspace/tests/` | `registry/catalog.rs` - 294 lines | `Implemented` |
+| `kaffein-infra` | `filesystem.rs`, `project_loader.rs`, `locale_files.rs`, `java_runner.rs` (JDK compile/run), `test_support.rs` | `java_runner.rs` - 224 lines; `locale_files.rs` - 189 lines | `Implemented` |
+| `kaffein-ui` | `lib.rs` (frame wiring), `actions.rs`, `editor.rs`, `menu.rs`, `toolbar.rs`, `status_bar.rs`, `project_panel.rs`, `bottom_panel.rs` + `bottom_panel/tests.rs` (run console), `path_prompt.rs`, `ui_state.rs`, `syntax/` (`theme`, `cache`, `layout`, `buffer`, tests), `theme.rs`, `tests.rs` | `syntax/cache.rs` - 296 lines | `Implemented` |
+| `kaffein` | `main.rs` (entry point), `app.rs` (eframe adapter, startup scratch document, run polling) | `app.rs` - 100 lines | `Implemented` |
 
 Update this table when a module moves, a file crosses the budget, or a crate gains an area. The line
 counts are evidence for the budget, not a target to grow into. Module names resolve under
@@ -164,7 +164,7 @@ Required properties:
 The precise command executor, state ownership model, and asynchronous execution mechanism are
 recorded below as they exist in the workspace, not assumed.
 
-**Current executor (2026-10-26).** `CommandRegistry` owns one `Command` descriptor per action:
+**Current registry and dispatch (2026-10-26).** `CommandRegistry` owns one `Command` descriptor per action:
 identifier, title key, category key, menu placement, toolbar placement, shortcuts, argument kind,
 enablement predicate, optional checked predicate, and handler. `Workspace::dispatch` is the only
 dispatch path; it resolves the command, validates required path arguments, runs the handler against
@@ -176,9 +176,12 @@ registry, and keyboard shortcuts are matched from the same descriptors. The egui
 Internal commands (`editor.replace_text`, `editor.activate`) and locale switching
 (`app.set_locale`) use the same path without appearing as ordinary menu entries.
 
-No asynchronous job executor exists yet: commands run on the UI thread and the only current work is
-in-memory editing plus bounded file/project reads. This meets the frame budget for the foundation
-shell but is not sufficient for compilation or indexing.
+**Current async execution (2026-10-28).** Commands still run on the UI thread, except `run.execute`, which
+validates the active buffer, starts one worker thread through `AppState::start_run`, and returns
+immediately. The worker calls the `JavaRunner` port and publishes a `RunState` snapshot; the UI polls
+that snapshot once per frame and requests a repaint while it is `Running`. There is no general job
+executor, queue, progress channel, or user cancellation command yet, so this is a single-purpose
+mechanism rather than the async foundation described below.
 
 ## Command model
 
@@ -255,6 +258,14 @@ Rules:
 - Cancellation is cooperative and observable: a cancelled job ends, cleans up, and reports
   cancellation rather than failing.
 
+**Current run job (2026-10-28).** `RunState` has an identity, a source name, and a terminal
+`Finished`/`Failed` state. The worker publishes an `Arc<RunState>` snapshot through a shared
+`Arc<Mutex<_>>` slot, so the UI can read the state without touching documents or copying captured
+output on every frame. `run.execute` rejects a second run while one is active. There is no progress
+channel and no cancellation command; the infrastructure kills a child that exceeds its timeout (10 s for
+`javac`, 15 s for `java`) and reports `timed_out`. The UI polls the snapshot and repaints every
+100 ms while the run is active. Status: `Partial`.
+
 ## Document model
 
 Document the real source of truth for editor contents and their lifecycle here. Verify the
@@ -262,15 +273,15 @@ implementation before filling in the details; each row needs a decision and evid
 
 | Topic | Requirement | Decision | Status | Evidence |
 |---|---|---|---|---|
-| Identity and file association | Each open document has a stable identity distinct from its path, so unsaved and renamed documents are representable | `DocumentId(u64)` allocated by `AppState`; the path is separate and currently always present | `Implemented` | `crates/kaffein-domain/src/document.rs`; `AppState::allocate_document_id` |
+| Identity and file association | Each open document has a stable identity distinct from its path, so unsaved and renamed documents are representable | `DocumentId(u64)` allocated by `AppState`; `path` is `Option<PathBuf>`, so a scratch document has identity without a file. `Document::scratch` is created at startup and by `file.new_scratch` | `Implemented` | `crates/kaffein-domain/src/document.rs`; `crates/kaffein-app/src/state.rs`; `a_scratch_document_has_no_path_and_starts_clean`; `a_scratch_document_is_editable_and_has_no_path` |
 | In-memory representation | Text storage is explicit (buffer, rope, or sequence) and documented together with its indexing unit (byte vs char vs UTF-16) | UTF-8 `String`, newlines normalised to `\n`. Undo diffing compares bytes; there is no incremental index yet | `Implemented` | `crates/kaffein-domain/src/document.rs`; `normalize_newlines`, `is_single_char_edit` |
-| Open / create / save / reload / close | Each transition is a command, with defined ordering and failure behaviour | New, open, save, and close are commands. Reload is not implemented. Closing a dirty document is refused rather than discarding edits | `Partial` | `file.new`, `file.open`, `file.save`, `file.close`; `workspace::tests::file_open::creating_a_file_adds_a_dirty_document_without_writing`; gap: reload, discard flow |
-| Dirty state and save prompts | Modified state derives from saved content, not from a boolean toggled by widgets | `buffer != saved_text`; `saved_text` is `None` until the first load or save, so a new document starts dirty. Saving replaces `saved_text` with the buffer | `Implemented` | `Document::is_dirty`, `mark_saved`, `Document::new`; `a_new_document_is_dirty_until_the_first_save` |
-| Encoding and line endings | Detected, preserved, and overrideable per document; conversion is explicit, never silent | UTF-8 only; invalid UTF-8 fails to open. CRLF/LF detected at load and restored on save; mixed endings and BOM are not surfaced | `Partial` | `crates/kaffein-infra/src/filesystem.rs`; `LineEnding::detect`; gap: encoding selection, mixed-ending diagnostic |
+| Open / create / save / reload / close | Each transition is a command, with defined ordering and failure behaviour | New, open, save, close, and new-scratch are commands. Reload is not implemented. Closing a dirty path-backed document is refused rather than discarding edits; a dirty scratch document is discarded on close and excluded from the quit warning because it has no save destination. Saving a scratch document is refused with a message pointing to `file.new` | `Partial` | `file.new`, `file.new_scratch`, `file.open`, `file.save`, `file.close`; `closing_a_dirty_scratch_discards_it_without_a_prompt`; `saving_a_scratch_document_is_refused`; gap: reload, save-as for scratch, discard flow for path-backed files |
+| Dirty state and save prompts | Modified state derives from saved content, not from a boolean toggled by widgets | `buffer != saved_text`; `saved_text` is `None` until the first load or save, so a new path-backed document starts dirty. A scratch document starts with its default text as saved content and becomes dirty on the first edit. `dirty_document_count` ignores scratch documents | `Implemented` | `Document::is_dirty`, `mark_saved`, `Document::new`, `Document::scratch`, `AppState::dirty_document_count`; `a_new_document_is_dirty_until_the_first_save`; `a_scratch_document_has_no_path_and_starts_clean` |
+| Encoding and line endings | Detected, preserved, and overrideable per document; conversion is explicit, never silent | UTF-8 only; invalid UTF-8 fails to open. CRLF/LF detected at load and restored on save; mixed endings and BOM are not surfaced. A scratch document uses LF | `Partial` | `crates/kaffein-infra/src/filesystem.rs`; `LineEnding::detect`; gap: encoding selection, mixed-ending diagnostic |
 | Undo / redo | Document-scoped history with grouping rules for typing and multi-step commands | Snapshot stack with 600 ms single-character coalescing; save keeps history; undo after edit clears redo | `Implemented` | `crates/kaffein-domain/src/document.rs`; `typing_within_the_window_coalesces_into_one_undo_step` |
 | Multiple views of one document | Tabs and split views share one document and one undo stack | One editor view per document; tabs switch the active document. Split views are not implemented | `Partial` | `crates/kaffein-ui/src/editor.rs` › `draw_tabs`; gap: split views |
 | External file changes | Detected change prompts a decision (reload, compare, ignore) without losing edits | Not detected | `Planned` | Roadmap M1 |
-| Thread safety | Which thread owns the document, and how background jobs read or propose edits | The UI thread owns all state; no background job reads documents yet | `Implemented` | `crates/kaffein/src/app.rs`; `Workspace` is not shared across threads |
+| Thread safety | Which thread owns the document, and how background jobs read or propose edits | The UI thread owns all state. The Java-run worker receives a copied source string and cannot read or mutate documents; it publishes only `RunState` | `Implemented` | `crates/kaffein/src/app.rs`; `crates/kaffein-app/src/commands/run.rs`; `crates/kaffein-app/src/state/run.rs` |
 
 The UTF indexing unit deserves special attention: the JVM, Rust, and egui do not agree on string
 width. Choose one canonical unit, document it, and convert only at boundaries.
@@ -291,7 +302,20 @@ language server. The boundary is infrastructure.
 | Failure | Distinguish "tool missing", "tool crashed", and "tool reported an error" — they need different UI |
 | Security | Project-provided build logic runs arbitrary code; the user consents before it runs (see [`security.md`](security.md)) |
 
-Record supported tools, version discovery, and process lifecycle in this table once implemented.
+**Current JDK runner (2026-10-28).** `StdJavaRunner` implements the `JavaRunner` port for
+`run.execute`. It is a deliberately narrow adapter, not a build system integration.
+
+| Concern | Current behaviour | Status | Evidence |
+|---|---|---|---|
+| Discovery | Invokes `javac` and `java` by name, so the OS resolves them from `PATH`. `JAVA_HOME` is not consulted and the selected tool path is not recorded | `Partial` | `crates/kaffein-infra/src/java_runner.rs` |
+| Versioning | Does not parse or validate the JDK version; a JDK 8 installation cannot use source-file mode, so the adapter always writes a temporary file | `Partial` | `compiles_and_runs_a_source_string` (run with `--ignored` on JDK 1.8.0_401) |
+| Invocation | Writes the buffer to a unique directory under the OS temp root, runs `javac -encoding UTF-8 -d . <Type>.java`, then `java -Dfile.encoding=UTF-8 -cp . <qualified.Type>`. Arguments are lists, never a shell string; the working directory is the temp directory | `Implemented` | `java_runner.rs`; `crates/kaffein-domain/src/java/name.rs` |
+| Source identity | File name comes from the first public type (or first type if none is public); the launcher name adds the declared package | `Implemented` | `primary_type_name`, `package_name`; `java::name::tests` |
+| Environment | The child inherits the parent environment, including credentials. This does not meet the deliberate-environment requirement | `Partial` | `java_runner.rs`; gap: environment allowlist |
+| Output | stdout and stderr are captured on reader threads, capped at 256 KiB per stream, and marked when truncated. The UI strips CSI/OSC terminal escape sequences and other control characters before rendering | `Implemented` | `read_limited`; `sanitize_output`; `terminal_escape_sequences_are_removed`, `terminal_osc_sequences_are_removed` |
+| Lifecycle | The child is polled, killed after 10 s (`javac`) or 15 s (`java`), and reaped. The temporary directory is removed after the run. There is no user cancellation command | `Partial` | `wait_for_exit`; `run_source` |
+| Failure | Separates "tool missing" (`JavaRunErrorKind::Unavailable`), temporary-file I/O, and compiler/program failure with an exit code. The console distinguishes compile failure, run exit, timeout, and infrastructure failure | `Implemented` | `JavaRunError`, `JavaRunOutput`, `run_summary` |
+| Security | Running the active buffer is an explicit user command; nothing runs on open. The program runs with the IDE's privileges in an isolated temp directory. Project build scripts and trust consent are not implemented | `Partial` | [`security.md`](security.md) › Process execution; `run.execute` |
 
 ## Open architectural questions
 
@@ -310,7 +334,9 @@ affected tables above.
 ## Verification
 
 The crate map, module layout, command executor, and most Document model rows were recorded on
-2026-10-26; steps 1–4 and 7 below were executed for the foundation shell. Remainder:
+2026-10-26; steps 1–4 and 7 below were executed for the foundation shell. On 2026-10-28, step 5 was
+traced for `run.execute` (`StdJavaRunner`, JDK 1.8.0_401) and the module-layout table was remeasured.
+Remainder:
 
 1. `cargo metadata --no-deps --format-version 1` → crate map (names, versions, targets).
 2. `cargo tree --depth 1 -p <package>` for each package → dependency edges; flag any upward or
@@ -320,7 +346,8 @@ The crate map, module layout, command executor, and most Document model rows wer
    the observed model in the Document model table. The open/edit/undo/save half exists; reload and
    external change are still gaps.
 5. Trace one external tool invocation end to end; record discovery order, environment, and
-   cancellation behaviour.
+   cancellation behaviour. Executed for `run.execute` on 2026-10-28; see the Current JDK runner
+   table and [`security.md`](security.md) › Process execution.
 6. Date every row you fill. Undated rows remain `Unknown`.
 7. Re-run the file budget check in [`development.md`](development.md) › File budget check; update
    the module-layout table if a file exceeds 300 lines or a module moved.

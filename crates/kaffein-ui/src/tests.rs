@@ -37,12 +37,61 @@ fn an_empty_workspace_assembles_without_actions() {
 }
 
 #[test]
+fn an_empty_editor_shows_default_java_code() {
+    let state = AppState::new(ThemePreference::Dark);
+    let mut ui_state = UiState::default();
+
+    let actions = draw_frame(&state, &mut ui_state);
+
+    assert!(actions.is_empty());
+    assert_eq!(ui_state.syntax.line_count_for_test(), 5);
+}
+
+#[test]
 fn an_open_document_renders_and_emits_no_actions() {
     let mut state = AppState::new(ThemePreference::Dark);
     state.add_document(Document::from_loaded(
         DocumentId(1),
         "C:/project/App.java",
         "class App {}\n",
+    ));
+    let mut ui_state = UiState::default();
+
+    let actions = draw_frame(&state, &mut ui_state);
+
+    assert!(actions.is_empty());
+}
+
+#[test]
+fn switching_between_clean_documents_updates_the_editor_text() {
+    let mut state = AppState::new(ThemePreference::Dark);
+    state.add_document(Document::from_loaded(
+        DocumentId(1),
+        "C:/project/A.java",
+        "class A {}\n",
+    ));
+    state.add_document(Document::from_loaded(
+        DocumentId(2),
+        "C:/project/B.java",
+        "class B {}\n",
+    ));
+    let mut ui_state = UiState::default();
+
+    draw_frame(&state, &mut ui_state);
+    assert_eq!(ui_state.editor.text, "class B {}\n");
+
+    state.activate(DocumentId(1));
+    draw_frame(&state, &mut ui_state);
+    assert_eq!(ui_state.editor.text, "class A {}\n");
+}
+
+#[test]
+fn a_java_document_with_all_token_families_renders() {
+    let mut state = AppState::new(ThemePreference::Dark);
+    state.add_document(Document::from_loaded(
+        DocumentId(1),
+        "C:/project/App.java",
+        "/** doc */\npublic class App {\n    // note\n    String s = \"hi\";\n    int n = 0x1f;\n    boolean b = n >>> 2 > 0;\n}\n",
     ));
     let mut ui_state = UiState::default();
 

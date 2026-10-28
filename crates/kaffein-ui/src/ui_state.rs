@@ -6,13 +6,16 @@ use kaffein_i18n::Localizer;
 use crate::bottom_panel::BottomTab;
 use crate::editor::EditorBuffer;
 use crate::path_prompt::PathPrompt;
+use crate::syntax::HighlightCache;
 
 #[derive(Debug, Default)]
 pub struct UiState {
     pub(crate) prompt: Option<PathPrompt>,
     pub(crate) bottom_tab: BottomTab,
     pub(crate) editor: EditorBuffer,
+    pub(crate) syntax: HighlightCache,
     pub(crate) applied_theme: Option<ThemePreference>,
+    pub(crate) seen_run_id: u64,
 }
 
 impl UiState {

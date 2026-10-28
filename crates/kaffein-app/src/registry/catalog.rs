@@ -12,7 +12,7 @@ use crate::command::{
 use crate::commands;
 
 use super::enablers::{
-    always, bottom_panel_visible, can_redo, can_undo, dark_theme, has_document,
+    always, bottom_panel_visible, can_redo, can_run, can_undo, dark_theme, has_document,
     project_panel_visible,
 };
 
@@ -21,6 +21,7 @@ const OPEN_SHORTCUTS: &[KeyBinding] = &[KeyBinding::ctrl(Key::O)];
 const SAVE_SHORTCUTS: &[KeyBinding] = &[KeyBinding::ctrl(Key::S)];
 const UNDO_SHORTCUTS: &[KeyBinding] = &[KeyBinding::ctrl(Key::Z)];
 const REDO_SHORTCUTS: &[KeyBinding] = &[KeyBinding::ctrl_shift(Key::Z), KeyBinding::ctrl(Key::Y)];
+const RUN_SHORTCUTS: &[KeyBinding] = &[KeyBinding::plain(Key::F5)];
 const QUIT_SHORTCUTS: &[KeyBinding] = &[KeyBinding::ctrl(Key::Q)];
 
 pub(super) fn commands() -> Vec<Command> {
@@ -59,6 +60,22 @@ pub(super) fn commands() -> Vec<Command> {
             can_execute: always,
             checked: None,
             run: commands::file_new,
+        },
+        Command {
+            id: command_id::FILE_NEW_SCRATCH,
+            title_key: keys::COMMAND_FILE_NEW_SCRATCH_TITLE,
+            category_key: keys::CATEGORY_FILE,
+            menu: Some(MenuPlacement {
+                menu: Menu::File,
+                order: 6,
+                separator_before: false,
+            }),
+            toolbar: None,
+            shortcuts: &[],
+            args: ArgKind::None,
+            can_execute: always,
+            checked: None,
+            run: commands::file_new_scratch,
         },
         Command {
             id: command_id::FILE_OPEN,
@@ -113,6 +130,25 @@ pub(super) fn commands() -> Vec<Command> {
             can_execute: has_document,
             checked: None,
             run: commands::file_close,
+        },
+        Command {
+            id: command_id::RUN_EXECUTE,
+            title_key: keys::COMMAND_RUN_EXECUTE_TITLE,
+            category_key: keys::CATEGORY_RUN,
+            menu: Some(MenuPlacement {
+                menu: Menu::Run,
+                order: 10,
+                separator_before: false,
+            }),
+            toolbar: Some(ToolbarPlacement {
+                order: 35,
+                label_key: keys::COMMAND_RUN_EXECUTE_TOOLBAR,
+            }),
+            shortcuts: RUN_SHORTCUTS,
+            args: ArgKind::None,
+            can_execute: can_run,
+            checked: None,
+            run: commands::run_execute,
         },
         Command {
             id: command_id::EDIT_UNDO,

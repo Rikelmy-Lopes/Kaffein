@@ -33,6 +33,17 @@ pub(super) fn can_redo(state: &AppState) -> Enablement {
     }
 }
 
+pub(super) fn can_run(state: &AppState) -> Enablement {
+    if state.run_state().is_running() {
+        return Enablement::Disabled(keys::ENABLEMENT_RUN_IN_PROGRESS);
+    }
+    match state.active_document() {
+        Some(document) if crate::commands::is_java_document(document) => Enablement::Enabled,
+        Some(_) => Enablement::Disabled(keys::ENABLEMENT_NOT_JAVA),
+        None => Enablement::Disabled(keys::ENABLEMENT_NO_DOCUMENT),
+    }
+}
+
 pub(super) fn project_panel_visible(state: &AppState) -> bool {
     state.show_project_panel()
 }

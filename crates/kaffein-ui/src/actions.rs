@@ -56,6 +56,7 @@ fn egui_key(key: kaffein_app::Key) -> Key {
         kaffein_app::Key::Z => Key::Z,
         kaffein_app::Key::Y => Key::Y,
         kaffein_app::Key::Q => Key::Q,
+        kaffein_app::Key::F5 => Key::F5,
     }
 }
 

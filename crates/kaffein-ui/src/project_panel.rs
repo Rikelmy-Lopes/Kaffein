@@ -71,7 +71,7 @@ pub(crate) fn draw_project_panel(
                 return;
             };
 
-            let active_path = state.active_document().map(|document| document.path());
+            let active_path = state.active_document().and_then(|document| document.path());
             ScrollArea::vertical()
                 .id_salt("project_tree")
                 .auto_shrink([false, false])

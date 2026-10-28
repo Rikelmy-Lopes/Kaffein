@@ -13,6 +13,7 @@ pub enum Key {
     Z,
     Y,
     Q,
+    F5,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -24,6 +25,15 @@ pub struct KeyBinding {
 }
 
 impl KeyBinding {
+    pub const fn plain(key: Key) -> Self {
+        Self {
+            key,
+            ctrl: false,
+            shift: false,
+            alt: false,
+        }
+    }
+
     pub const fn ctrl(key: Key) -> Self {
         Self {
             key,
@@ -60,6 +70,7 @@ impl KeyBinding {
             Key::Z => "Z",
             Key::Y => "Y",
             Key::Q => "Q",
+            Key::F5 => "F5",
         });
         parts.join("+")
     }

@@ -140,3 +140,89 @@ pub trait FileSystem {
 pub trait ProjectLoader {
     fn load(&self, root: &Path) -> Result<ProjectTree, FsError>;
 }
+
+/// Which step of a Java run produced the captured output.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum JavaRunStage {
+    Compile,
+    Run,
+}
+
+/// Captured output from a compiler or launcher invocation.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct JavaRunOutput {
+    pub stage: JavaRunStage,
+    pub stdout: String,
+    pub stderr: String,
+    /// `None` when no exit code is available, including a timed-out process
+    /// that was killed.
+    pub exit_code: Option<i32>,
+    pub timed_out: bool,
+    pub stdout_truncated: bool,
+    pub stderr_truncated: bool,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum JavaRunErrorKind {
+    /// `javac` or `java` could not be started, usually because the JDK is missing.
+    Unavailable,
+    /// A temporary file or directory could not be created or written.
+    Io,
+    Other,
+}
+
+/// The reason a run could not be started or completed.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct JavaRunError {
+    kind: JavaRunErrorKind,
+    detail: String,
+}
+
+impl JavaRunError {
+    pub fn unavailable(detail: impl Into<String>) -> Self {
+        Self {
+            kind: JavaRunErrorKind::Unavailable,
+            detail: detail.into(),
+        }
+    }
+
+    pub fn io(detail: impl Into<String>) -> Self {
+        Self {
+            kind: JavaRunErrorKind::Io,
+            detail: detail.into(),
+        }
+    }
+
+    pub fn other(detail: impl Into<String>) -> Self {
+        Self {
+            kind: JavaRunErrorKind::Other,
+            detail: detail.into(),
+        }
+    }
+
+    pub fn kind(&self) -> JavaRunErrorKind {
+        self.kind
+    }
+
+    pub fn detail(&self) -> &str {
+        &self.detail
+    }
+}
+
+impl std::fmt::Display for JavaRunError {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(formatter, "java run error {:?}: {}", self.kind, self.detail)
+    }
+}
+
+impl std::error::Error for JavaRunError {}
+
+/// Compiles and runs a Java source buffer without saving it to a project file.
+///
+/// Implementations materialise the source in a private temporary directory,
+/// invoke the JDK with argument lists (never a shell), and clean up before
+/// returning. The method blocks, so the application calls it from a worker
+/// thread rather than from the UI frame.
+pub trait JavaRunner: Send + Sync {
+    fn run_source(&self, source: &str) -> Result<JavaRunOutput, JavaRunError>;
+}

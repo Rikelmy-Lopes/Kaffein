@@ -68,6 +68,29 @@ new locale on the next launch.
 Run `cargo test -p kaffein-i18n` after changing keys or catalogs; the completeness test covers every
 bundled locale.
 
+## Running Java from the IDE
+
+`run.execute` (**Run** in the toolbar and **Run** menu, shortcut `F5`) compiles and runs the active
+Java buffer without saving it. It requires `javac` and `java` on `PATH`; the adapter does not consult
+`JAVA_HOME`. The source is written to a unique directory under the OS temp root, compiled with
+`javac -encoding UTF-8`, launched with `java -Dfile.encoding=UTF-8 -cp .`, and the directory is
+removed afterwards. Compilation times out after 10 s, execution after 15 s, and each captured stream
+is capped at 256 KiB. Output appears in the bottom **Console** tab; the tab is selected automatically
+when a run starts.
+
+The startup workspace contains an editable **Scratch.java** document with a runnable
+`public class Main`. It has no path on disk: **Save** is refused and closing it discards the buffer.
+**File › New Scratch File** creates another one.
+
+The JDK integration has ignored tests because they need a real toolchain:
+
+```sh
+cargo test -p kaffein-infra -- --ignored
+```
+
+On this machine both tests passed against JDK `1.8.0_401` on 2026-10-28. JDK 8 has no source-file
+launch mode, which is why the adapter always writes a temporary file.
+
 ## Test and quality gates
 
 ```sh
@@ -253,6 +276,14 @@ is `Unknown` — do not guess.
 | Largest Rust source file after localisation | `crates/kaffein-app/src/registry/catalog.rs` — 246 lines; `kaffein-i18n/src/keys.rs` is 159 lines; budget is 300 | `Verified` | [File budget check](#file-budget-check) | 2026-10-26 |
 | Largest Rust source file after locale switching | `crates/kaffein-app/src/registry/catalog.rs` — 258 lines; `kaffein-i18n/src/localizer.rs` is 253 lines; budget is 300 | `Verified` | [File budget check](#file-budget-check) | 2026-10-26 |
 | App launch smoke test | Debug binary stayed running for 6 s with window title `Kaffein` and empty stderr | `Verified` | `Start-Process .\target\debug\kaffein.exe` | 2026-10-26 |
+| Java syntax highlighting | Line-oriented lexer in `kaffein-domain/src/java/` (`java/lexer.rs`, `java/lexer/scan.rs`, line-local semantic classifier in `java/lexer/classify.rs`, token kinds in `java/token.rs`) with an incremental line-hash cache and cached egui galley in `kaffein-ui/src/syntax/` | `Implemented` | `cargo test -p kaffein-domain`; `cargo test -p kaffein-ui --lib syntax`; 2026-10-28 | 2026-10-28 |
+| Largest Rust source file after Java highlighting | `crates/kaffein-ui/src/syntax/cache.rs` — 291 lines; `crates/kaffein-domain/src/java/lexer/scan.rs` - 280 lines; budget is 300 | `Verified` | [File budget check](#file-budget-check) | 2026-10-27 |
+| Largest Rust source file after semantic highlighting | `crates/kaffein-ui/src/syntax/cache.rs` — 296 lines; `crates/kaffein-domain/src/java/lexer/scan.rs` - 280 lines; budget is 300 | `Verified` | [File budget check](#file-budget-check) | 2026-10-28 |
+| JDK used for run tests | `java -version` and `javac -version` both report `1.8.0_401` on Windows | `Verified` | command output | 2026-10-28 |
+| Java run adapter | `run.execute` writes the active buffer to a temp directory, compiles with `javac`, launches `java`, caps each stream at 256 KiB, times out after 10 s/15 s, and removes the directory; `cargo test -p kaffein-infra -- --ignored` passed, including a packaged source | `Implemented` | `crates/kaffein-infra/src/java_runner.rs`; `compiles_and_runs_a_source_string`, `compiles_and_runs_a_package_declaration` | 2026-10-28 |
+| Build, format, lint, test after scratch/run | `cargo check --workspace --all-targets`, `cargo fmt --all -- --check`, `cargo clippy --workspace --all-targets --all-features -- -D warnings`, and `cargo test --workspace` all passed; 122 tests passed, 2 ignored (28 app, 46 domain, 12 i18n, 11 infra + 2 ignored, 25 UI) | `Verified` | command output | 2026-10-28 |
+| App launch smoke test after scratch/run | Debug binary stayed running for 4 s after startup, which dispatches scratch creation; stderr was empty | `Verified` | `Start-Process .\target\debug\kaffein.exe -RedirectStandardError <temp>` | 2026-10-28 |
+| Largest Rust source file after scratch/run | `crates/kaffein-ui/src/syntax/cache.rs` — 296 lines; `crates/kaffein-app/src/registry/catalog.rs` — 294 lines; `crates/kaffein-app/src/state.rs` — 269 lines; budget is 300 | `Verified` | [File budget check](#file-budget-check) | 2026-10-28 |
 
 ## Verification
 

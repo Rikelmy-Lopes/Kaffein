@@ -53,19 +53,20 @@ Status uses the vocabulary in [`README.md`](README.md): `Verified`, `Implemented
 | Application shell and window management | `Partial` | `E1` | `crates/kaffein/src/main.rs`; window `Kaffein` launched 2026-10-26. Gap: layout persistence and narrow-window checks |
 | Command registry, dispatch, and undo | `Implemented` | `E3` | `workspace::tests::edit::undo_and_redo_dispatch_through_the_document`, `file_open_without_a_path_is_an_internal_error`; `cargo test --workspace` 2026-10-26 |
 | File/project explorer | `Partial` | `E2` | `project_loader::tests::scans_directories_first_and_skips_ignored_folders`, `workspace::tests::project::opening_a_project_builds_the_tree`. Gap: no filtering or file operations |
-| Editor and document lifecycle | `Partial` | `E3` | `creating_a_file_adds_a_dirty_document_without_writing`, `editing_then_saving_writes_the_document_and_clears_dirty_state`, `closing_a_dirty_document_is_refused`. Gap: reload, external change, discard flow |
-| Tabs, split views, tool windows | `Partial` | `E2` | `workspace::tests::edit::activating_an_open_document_switches_the_active_tab`; `draw_tabs`. Gap: split views; bottom tool tabs are placeholders |
+| Editor and document lifecycle | `Partial` | `E3` | `creating_a_file_adds_a_dirty_document_without_writing`, `editing_then_saving_writes_the_document_and_clears_dirty_state`, `closing_a_dirty_document_is_refused`, `a_scratch_document_is_editable_and_has_no_path`, `saving_a_scratch_document_is_refused`. Gap: reload, external change, save-as for scratch, discard flow for path-backed files |
+| Java syntax highlighting | `Implemented` | `E3` | Lexer in `kaffein-domain/src/java/`, line-local semantic classifier for types, methods, fields, and constants, incremental cache in `kaffein-ui/src/syntax/`, per-token `SyntaxTheme`; lexer kinds for keywords, strings, comments, numbers, operators. Gap: visual and contrast verification against a running build; semantic classification is heuristic and does not resolve symbols |
+| Tabs, split views, tool windows | `Partial` | `E2` | `workspace::tests::edit::activating_an_open_document_switches_the_active_tab`; `draw_tabs`; the Console tab renders live run state. Gap: split views; Problems and Build tabs are placeholders |
 | Search and navigation | `Unknown` | `E0` | M2: project-wide search, go to declaration |
-| Java/JDK discovery and configuration | `Unknown` | `E0` | M2: discovery order recorded, version mismatch diagnosed |
+| Java/JDK discovery and configuration | `Unknown` | `E0` | M2: discovery order recorded, version mismatch diagnosed. Current run adapter resolves `javac`/`java` from `PATH` only |
 | Build and compilation workflows | `Unknown` | `E0` | M2: one build system, diagnostics mapped to files |
-| Run/debug workflows | `Unknown` | `E0` | M2 run; M3 debug if in scope |
+| Run/debug workflows | `Partial` | `E3` | `run.execute` compiles and runs the active Java buffer through a temporary file, reports stdout/stderr, exit code, and timeout in the Console tab; `compiles_and_runs_a_source_string` (ignored, JDK 1.8.0_401, 2026-10-28). Gap: no debugger, no cancel command, no environment allowlist |
 | Diagnostics and error navigation | `Unknown` | `E0` | M2: gutter, underline, problem list, jump-to-source |
 | Testing workflows | `Unknown` | `E0` | M3: discover, run, and report JUnit tests |
 | Refactoring and code intelligence | `Unknown` | `E0` | M3: at least rename with preview and undo |
 | Version control integration | `Unknown` | `E0` | M3: status, diff, commit as commands |
 | Themes and visual polish | `Partial` | `E1` | `crates/kaffein-ui/src/theme.rs`; `view.toggle_theme` command. Gap: contrast and screenshots not re-measured |
 | Localisation and locale switching | `Implemented` | `E3` | `app.set_locale`; embedded `en`/`pt-BR` catalogs; `every_declared_key_resolves_in_every_bundled_locale`, `switching_a_locale_persists_and_is_restored`, `switching_locale_rerenders_text_captured_before_the_switch`. Gap: Portuguese copy not reviewed by a native speaker; no shipped surface shows a formatted date; plural selection is one/other only |
-| Keyboard and accessibility | `Partial` | `E1` | `crates/kaffein-app/src/registry/catalog.rs` shortcut table (`Ctrl+N/O/S/Z/Y/Q`) dispatches commands. Gap: no palette, focus ring and scale factors unverified |
+| Keyboard and accessibility | `Partial` | `E1` | `crates/kaffein-app/src/registry/catalog.rs` shortcut table (`Ctrl+N/O/S/Z/Y/Q`, `F5`) dispatches commands. Gap: no palette, focus ring and scale factors unverified |
 | Performance and reliability | `Unknown` | `E0` | Budgeted scenarios defined and measured in [`docs/development.md`](docs/development.md) |
 | Settings, persistence, extensibility | `Partial` | `E2` | The selected locale persists in `settings.json` with other keys preserved (`crates/kaffein-infra/src/locale_files.rs`). Gap: no settings schema or migration, and no plugin decision |
 | Security posture | `Proposed` | `E0` | [`docs/security.md`](docs/security.md) controls implemented and audited |
@@ -106,6 +107,10 @@ stack, external file changes are detected, and settings persist across restarts.
 
 **Done when:** the IDE discovers a JDK, loads a project for one build system, compiles it, maps
 diagnostics to source positions, and runs a main class with correct process lifecycle in the console.
+
+Progress on 2026-10-28: `run.execute` compiles and runs the active buffer in a temporary directory and
+reports output, exit code, and timeout. JDK discovery, project build integration, and diagnostic
+mapping remain open.
 
 ### M3 — Productivity
 
@@ -171,4 +176,8 @@ verification remain outstanding).
 | 2026-10-26 | Split the workspace into modules by responsibility: `command/`, `commands/`, `registry/`, per-surface UI modules, and `tests/` folders. No behaviour change; every source file is under the 300-line budget | `cargo test --workspace` (39 passed); [`docs/architecture.md`](docs/architecture.md) › Module layout |
 | 2026-10-26 | Added `kaffein-i18n` and moved all user-facing text into an English JSON catalog; commands, UI surfaces, and infrastructure errors now resolve keys instead of embedding copy | `cargo test --workspace` (43 passed); [`docs/architecture.md`](docs/architecture.md) › Localisation; [`docs/development.md`](docs/development.md) › Verified facts |
 | 2026-10-26 | Dynamic localisation completed: embedded `en`/`pt-BR` catalogs, external catalog loading and locale persistence, deferred `Text` that re-renders existing messages, number/date formatting, and a View › Language selector backed by `app.set_locale` | `cargo test --workspace` (59 passed); `cargo clippy --workspace --all-targets --all-features -- -D warnings`; [`docs/architecture.md`](docs/architecture.md) › Localisation |
+| 2026-10-27 | Java syntax highlighting implemented: stateful line lexer, incremental token cache, cached galley layout, and a configurable per-token `SyntaxTheme` | `cargo test --workspace` (87 passed); [`docs/ui-design.md`](docs/ui-design.md) › Editor surface; [`docs/architecture.md`](docs/architecture.md) › Module layout |
+| 2026-10-28 | Empty editor now shows a read-only `public class Main` sample with syntax highlighting instead of a blank surface | `crates/kaffein-ui/src/tests.rs` › `an_empty_editor_shows_default_java_code` |
+| 2026-10-28 | Semantic Java highlighting: identifiers are classified as types, methods, fields, constants, or plain identifiers using line-local heuristics, and `SyntaxTheme` exposes a colour for each | `crates/kaffein-domain/src/java/lexer/classify/tests.rs`; `crates/kaffein-ui/src/syntax/tests.rs` › `a_custom_theme_can_colour_each_semantic_kind`; `cargo test --workspace` (102 passed) |
+| 2026-10-28 | Startup creates an editable in-memory `Scratch.java` instead of a read-only sample; `run.execute` compiles and runs the active buffer through temporary JDK files and reports output in the Console tab | `cargo test --workspace` (122 passed, 2 ignored); ignored JDK tests passed; app launch smoke test; [`docs/architecture.md`](docs/architecture.md) › Current JDK runner |
 

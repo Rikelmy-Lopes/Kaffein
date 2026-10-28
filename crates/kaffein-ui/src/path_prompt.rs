@@ -127,7 +127,9 @@ fn default_prompt_path(kind: ArgKind, state: &AppState, localizer: &Localizer) -
         ArgKind::Directory => state.project().map(|project| project.root().to_path_buf()),
         ArgKind::NewFile | ArgKind::File => state
             .active_document()
-            .and_then(|document| document.path().parent().map(std::path::Path::to_path_buf))
+            .and_then(|document| document.path())
+            .and_then(std::path::Path::parent)
+            .map(std::path::Path::to_path_buf)
             .or_else(|| state.project().map(|project| project.root().to_path_buf())),
         _ => None,
     };

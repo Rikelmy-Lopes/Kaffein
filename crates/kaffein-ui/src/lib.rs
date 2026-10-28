@@ -14,6 +14,7 @@ mod menu;
 mod path_prompt;
 mod project_panel;
 mod status_bar;
+mod syntax;
 mod toolbar;
 mod ui_state;
 
@@ -81,17 +82,10 @@ pub fn draw(
         );
     }
     if state.show_bottom_panel() {
-        bottom_panel::draw_bottom_panel(ctx, localizer, ui_state, theme);
+        let run = state.run_state();
+        bottom_panel::draw_bottom_panel(ctx, &run, localizer, ui_state, theme);
     }
-    editor::draw_editor_panel(
-        ctx,
-        state,
-        registry,
-        localizer,
-        ui_state,
-        &mut actions,
-        theme,
-    );
+    editor::draw_editor_panel(ctx, state, localizer, ui_state, &mut actions, theme);
     path_prompt::draw_path_prompt(ctx, localizer, ui_state, &mut actions);
 
     actions

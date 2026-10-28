@@ -31,6 +31,17 @@ fn a_new_document_is_dirty_until_the_first_save() {
 }
 
 #[test]
+fn a_scratch_document_has_no_path_and_starts_clean() {
+    let doc = Document::scratch(DocumentId(3), "public class Main {}\n");
+
+    assert!(doc.is_scratch());
+    assert_eq!(doc.path(), None);
+    assert_eq!(doc.display_name(), "Scratch.java");
+    assert!(!doc.is_dirty());
+    assert_eq!(doc.buffer(), "public class Main {}\n");
+}
+
+#[test]
 fn editing_marks_dirty_and_undo_restores_content() {
     let mut doc = document("abc");
     assert!(doc.replace_text("abcd", 1_000));

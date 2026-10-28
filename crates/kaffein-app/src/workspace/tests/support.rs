@@ -4,7 +4,10 @@ use std::collections::{HashMap, HashSet};
 use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
 
-use kaffein_domain::{FileSystem, FsError, ProjectEntry, ProjectLoader, ProjectTree};
+use kaffein_domain::{
+    FileSystem, FsError, JavaRunError, JavaRunOutput, JavaRunStage, JavaRunner, ProjectEntry,
+    ProjectLoader, ProjectTree,
+};
 use kaffein_i18n::Localizer;
 
 use crate::command::{command_id, CommandArgs};
@@ -78,12 +81,83 @@ impl ProjectLoader for FakeProjects {
     }
 }
 
+#[derive(Clone, Default)]
+pub(crate) struct FakeJavaRunner {
+    pub(crate) sources: Arc<Mutex<Vec<String>>>,
+    pub(crate) result: Arc<Mutex<Option<Result<JavaRunOutput, JavaRunError>>>>,
+}
+
+impl FakeJavaRunner {
+    pub(crate) fn with_output(stdout: &str) -> Self {
+        Self {
+            sources: Arc::new(Mutex::new(Vec::new())),
+            result: Arc::new(Mutex::new(Some(Ok(JavaRunOutput {
+                stage: JavaRunStage::Run,
+                stdout: stdout.to_owned(),
+                stderr: String::new(),
+                exit_code: Some(0),
+                timed_out: false,
+                stdout_truncated: false,
+                stderr_truncated: false,
+            })))),
+        }
+    }
+
+    pub(crate) fn sources(&self) -> Vec<String> {
+        self.sources.lock().expect("fake java sources").clone()
+    }
+}
+
+impl JavaRunner for FakeJavaRunner {
+    fn run_source(&self, source: &str) -> Result<JavaRunOutput, JavaRunError> {
+        self.sources
+            .lock()
+            .expect("fake java sources")
+            .push(source.to_owned());
+        self.result
+            .lock()
+            .expect("fake java result")
+            .clone()
+            .unwrap_or_else(|| {
+                Ok(JavaRunOutput {
+                    stage: JavaRunStage::Run,
+                    stdout: String::new(),
+                    stderr: String::new(),
+                    exit_code: Some(0),
+                    timed_out: false,
+                    stdout_truncated: false,
+                    stderr_truncated: false,
+                })
+            })
+    }
+}
+
 pub(crate) fn workspace() -> (Workspace, Arc<Mutex<FakeDisk>>) {
+    let (workspace, disk, _) = workspace_with_runner();
+    (workspace, disk)
+}
+
+pub(crate) fn workspace_with_runner() -> (Workspace, Arc<Mutex<FakeDisk>>, FakeJavaRunner) {
+    workspace_with_java_runner(FakeJavaRunner::default())
+}
+
+pub(crate) fn workspace_with_java_runner(
+    runner: FakeJavaRunner,
+) -> (Workspace, Arc<Mutex<FakeDisk>>, FakeJavaRunner) {
     let disk = Arc::new(Mutex::new(FakeDisk::default()));
     let fs = FakeFs { disk: disk.clone() };
     let projects = FakeProjects { disk: disk.clone() };
-    let services = Services::new(Box::new(fs), Box::new(projects), Localizer::english());
-    (Workspace::new(services, ThemePreference::Dark), disk)
+    let services = Services::new(
+        Box::new(fs),
+        Box::new(projects),
+        Arc::new(runner.clone()),
+        Localizer::english(),
+    );
+    (
+        Workspace::new(services, ThemePreference::Dark),
+        disk,
+        runner,
+    )
 }
 
 pub(crate) fn add_file(disk: &Arc<Mutex<FakeDisk>>, path: &str, contents: &str) {

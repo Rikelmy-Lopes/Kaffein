@@ -29,7 +29,7 @@ Five constraints drive most decisions:
 
 ```
 ┌──────────────────────────────────────────────────────────────────────────────┐
-│ Menu bar          File  Edit  View  Navigate  Code  Analyze  Refactor  …     │ 28
+│ Menu bar          File  Edit  View  Run  Navigate  Code  Analyze  …         │ 28
 ├──────────────────────────────────────────────────────────────────────────────┤
 │ Toolbar   [Run] [Debug] [Stop]        breadcrumb: src › main › java › App     │ 34
 ├───────────────────┬──────────────────────────────────────────────────────────┤
@@ -43,7 +43,7 @@ Five constraints drive most decisions:
 │                   │  6      }                                                 │
 │                   │  7  }                                                     │
 ├───────────────────┼──────────────────────────────────────────────────────────┤
-│                   │  Problems  │  Build  │  Terminal  │  Version Control      │ 26  tab strip
+│                   │  Problems  │  Build  │  Console  │  Version Control      │ 26  tab strip
 │                   │  (content of the selected bottom tool window)             │ 160+ resizable
 ├───────────────────┴──────────────────────────────────────────────────────────┤
 │ main ↑2   ⚠ 0  ✖ 1   Java 21   Gradle   UTF-8   LF   English   indexing…  │ 24
@@ -120,9 +120,10 @@ Rules:
 - Syntax highlighting tokens are separate from chrome tokens so editor themes can change
   independently.
 
-The theme module is the source of truth: `crates/kaffein-ui/src/theme.rs`. The dark and light
-columns above are mirrored from it on 2026-10-26; the values are `Implemented`, not `Verified`.
-The `view.toggle_theme` command switches between the two sets at runtime.
+The theme module is the source of truth: `crates/kaffein-ui/src/theme.rs` for chrome and
+`crates/kaffein-ui/src/syntax/theme.rs` for Java syntax token colours. The dark and light columns above
+are mirrored from it on 2026-10-26; the values are `Implemented`, not `Verified`. The `view.toggle_theme`
+command switches between the two sets at runtime.
 
 Contrast of these values was computed on 2026-10-26 with the WCAG 2.1 relative-luminance formula.
 Every foreground token (`text_primary`, `text_muted`, `selection_text`, `accent`, `error`,
@@ -136,6 +137,43 @@ Baseline revised on 2026-10-26 to meet that target: `accent`, `error`, `success`
 light `text_muted` changed values; `selection_text` became a foreground token, `selection_editor`
 was added for the selection background, and `border_strong` was added so splitter handles are not
 drawn with a decorative border. The previous values were never measured against a build.
+
+### Syntax tokens
+
+Java token colours are a separate token group from the chrome tokens above. The source of truth is the
+syntax theme module, `crates/kaffein-ui/src/syntax/theme.rs`; the table mirrors its implemented values
+on 2026-10-28 and the status is `Implemented`, not `Verified`.
+
+| Token | Role | Dark baseline | Light baseline |
+|---|---|---|---|
+| `keyword` | Java keywords, literals, contextual keywords | `#CF8E6D` | `#0033B3` |
+| `type_name` | Class, interface, enum, and record names; type usages | `#4EC9B0` | `#267F99` |
+| `method` | Method declarations, calls, and method references | `#DCDCAA` | `#795E26` |
+| `field` | Fields and members accessed through `.` | `#9CDCFE` | `#001080` |
+| `constant` | `SCREAMING_SNAKE_CASE` constants and enum constants | `#C586C0` | `#AF00DB` |
+| `identifier` | Local variables, parameters, package segments, and unclassified identifiers | `text_primary` | `text_primary` |
+| `string` | String literals and text blocks | `#6AAB73` | `#067D17` |
+| `character` | Character literals | `#6AAB73` | `#067D17` |
+| `number` | Numeric literals (decimal, hex, binary, floating) | `#2AACB8` | `#1750EB` |
+| `line_comment` / `block_comment` | Line and block comments | `#8C9099` | `#6A6D73` |
+| `javadoc_comment` | Documentation comments | `#9DA0A8` | `#626A78` |
+| `annotation` | Annotation references (`@Override`) | `#B3AE60` | `#7A6800` |
+| `operator` | Operators, including multi-character forms | `text_primary` | `text_primary` |
+| `punctuation` | Braces, brackets, separators, ellipsis | `text_primary` | `text_primary` |
+
+The domain assigns token kinds only; the UI decides the colour, so editor themes can override every
+value through `SyntaxTheme` without adding new chrome tokens. Token kinds live in
+`kaffein-domain/src/java/token.rs`; the line-local semantic classifier is
+`kaffein-domain/src/java/lexer/classify.rs`; colouring is wired in `kaffein-ui/src/syntax/theme.rs`.
+
+The classifier is heuristic and never crosses a line boundary: it uses declaration keywords, call
+parentheses, member access, array/varargs suffixes, and naming conventions. It does not resolve
+symbols, so a local or field declared without a call keeps the `identifier` colour, and a type name
+that does not start with an uppercase letter is only recognised after `class`, `interface`, `enum`,
+`record`, `new`, or an array/varargs suffix.
+
+Contrast: syntax token colours are treated as code body text and still need a captured-frame check in
+both themes before any token row moves from `Implemented` to `Verified`.
 
 ## Typography
 
@@ -189,10 +227,11 @@ Rules:
 |---|---|---|---|
 | Menu bar | Top-level items, popup panels, shortcut hints, separators | open, hover, disabled | Every item maps to a command; shortcuts render from the registry |
 | Language selector | **View** submenu, locale names, active marker | open, hover, selected | Generated from the loaded catalogs; selecting a name dispatches `app.set_locale` |
-| Toolbar | Icon buttons, overflow chevron | default, hover, pressed, disabled, running | Icons only with tooltips that include the shortcut |
+| Toolbar | Icon buttons, overflow chevron | default, hover, pressed, disabled, running | Icons only with tooltips that include the shortcut. `run.execute` is disabled with a reason while a run is active |
 | Project tree | Rows, chevrons, file icons, VCS status colour | selected, focused, modified, ignored, loading | Indentation 12 px per level; no horizontal scrolling above 3 levels |
 | Editor tabs | Title, dirty dot, close button, overflow | active, inactive, hover, dirty, error | Middle-click closes; drag reorders; unsaved tabs are visually distinct |
 | Editor surface | Gutter, text, overlays | caret, selection, search hit, current line, breakpoint, folded | See [Editor surface](#editor-surface) |
+| Run console | Summary line, stdout/stderr sections, truncation notice | idle, running, finished, failed, timed out | Auto-selects the Console tab when a run starts. Child output is sanitised before rendering. No cancel control yet; the infrastructure kills a child at its timeout |
 | Breadcrumb | Path segments, dropdown per segment | hover, focused | Hidden if it costs more than one text line of value |
 | Tool window | Title bar, actions, content | collapsed, expanded, focused, pinned | Title bar holds actions, not a menu of menus |
 | Tabs strip (bottom) | Tabs, badge counts, close | active, inactive, has-errors | Keep tab count under ~6; overflow into a list |
@@ -212,6 +251,9 @@ Rules:
 | Current line | One step lighter than `surface_editor`, no border |
 | Indent guides | `border_subtle`, 1 px, aligned to tab stops |
 | Diagnostics | 1 px wavy underline in severity colour + gutter marker; never colour-only (icon or tooltip too) |
+| Syntax highlighting | Token colours from the document's lexer and line-local classifier mapped through the editor theme; one colour per `TokenKind`, including type, method, field, and constant | `Implemented` — lexer and classifier in `kaffein-domain/src/java/`, colour scheme in `kaffein-ui/src/syntax/theme.rs` (2026-10-28); gap: visual and contrast verification against a running build |
+| Scratch document | Editable in-memory Java sample (`public class Main`) created at startup and by **File › New Scratch File**; no project file is written. **Save** is refused with a message pointing to **New File…**; **Run** compiles and executes the buffer | `Implemented` — `file.new_scratch`, `Document::scratch`, `a_scratch_document_is_editable_and_has_no_path`, `running_a_scratch_document_uses_the_buffer_without_saving_it` (2026-10-28); gap: no save-as, visual verification |
+| No document open | Read-only Java sample with syntax highlighting after every document is closed; the surface stays non-editable until a document opens | `Implemented` — `an_empty_editor_shows_default_java_code` (2026-10-28); gap: visual verification |
 | Matching bracket | 2 px outline, no fill |
 | Fold marker | In the gutter, visible on hover and always when folded |
 | Inlay hints | 12 px `text_muted`, hideable, never inside the caret's line box |

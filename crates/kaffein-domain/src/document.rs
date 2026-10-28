@@ -17,6 +17,9 @@ use std::path::{Path, PathBuf};
 /// How long consecutive single-character edits are grouped into one undo step.
 const COALESCE_WINDOW_MS: u64 = 600;
 
+/// File name shown for a document that has no path on disk.
+const SCRATCH_DISPLAY_NAME: &str = "Scratch.java";
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct DocumentId(pub u64);
 
@@ -29,7 +32,8 @@ struct Snapshot {
 #[derive(Debug)]
 pub struct Document {
     id: DocumentId,
-    path: PathBuf,
+    /// `None` for an in-memory scratch document that has never been saved.
+    path: Option<PathBuf>,
     buffer: String,
     /// `None` until the document has been loaded from or written to disk.
     saved_text: Option<String>,
@@ -47,10 +51,31 @@ impl Document {
         let buffer = normalize_newlines(raw);
         Self {
             id,
-            path: path.into(),
+            path: Some(path.into()),
             saved_text: Some(buffer.clone()),
             buffer,
             line_ending,
+            undo: Vec::new(),
+            redo: Vec::new(),
+            revision: 0,
+            last_edit_ms: None,
+        }
+    }
+
+    /// Creates an in-memory scratch document with no path on disk.
+    ///
+    /// The default text is treated as the scratch document's saved content so
+    /// the tab starts clean. Edits mark it dirty, but it is disposable: closing
+    /// it discards the buffer instead of asking for a path.
+    pub fn scratch(id: DocumentId, text: impl Into<String>) -> Self {
+        let raw = text.into();
+        let buffer = normalize_newlines(&raw);
+        Self {
+            id,
+            path: None,
+            saved_text: Some(buffer.clone()),
+            buffer,
+            line_ending: LineEnding::Lf,
             undo: Vec::new(),
             redo: Vec::new(),
             revision: 0,
@@ -65,7 +90,7 @@ impl Document {
     pub fn new(id: DocumentId, path: impl Into<PathBuf>) -> Self {
         Self {
             id,
-            path: path.into(),
+            path: Some(path.into()),
             buffer: String::new(),
             saved_text: None,
             line_ending: LineEnding::Lf,
@@ -80,15 +105,24 @@ impl Document {
         self.id
     }
 
-    pub fn path(&self) -> &Path {
-        &self.path
+    /// The backing file path, or `None` for a scratch document.
+    pub fn path(&self) -> Option<&Path> {
+        self.path.as_deref()
+    }
+
+    pub fn is_scratch(&self) -> bool {
+        self.path.is_none()
     }
 
     pub fn display_name(&self) -> String {
         self.path
-            .file_name()
-            .map(|name| name.to_string_lossy().into_owned())
-            .unwrap_or_else(|| self.path.to_string_lossy().into_owned())
+            .as_deref()
+            .map(|path| {
+                path.file_name()
+                    .map(|name| name.to_string_lossy().into_owned())
+                    .unwrap_or_else(|| path.to_string_lossy().into_owned())
+            })
+            .unwrap_or_else(|| SCRATCH_DISPLAY_NAME.to_owned())
     }
 
     pub fn buffer(&self) -> &str {

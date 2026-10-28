@@ -16,6 +16,7 @@
     "file": "Arquivo",
     "edit": "Editar",
     "view": "Exibir",
+    "run": "Executar",
     "language": "Idioma"
   },
   "category": {
@@ -23,6 +24,7 @@
     "file": "Arquivo",
     "edit": "Edição",
     "view": "Exibição",
+    "run": "Execução",
     "application": "Aplicativo",
     "editor": "Editor"
   },
@@ -37,6 +39,9 @@
       "new": {
         "title": "Novo Arquivo…"
       },
+      "new_scratch": {
+        "title": "Novo Arquivo Temporário"
+      },
       "open": {
         "title": "Abrir Arquivo…",
         "toolbar": "Abrir"
@@ -47,6 +52,12 @@
       },
       "close": {
         "title": "Fechar Arquivo"
+      }
+    },
+    "run": {
+      "execute": {
+        "title": "Executar Arquivo Atual",
+        "toolbar": "Executar"
       }
     },
     "edit": {
@@ -125,7 +136,20 @@
     "empty": {
       "problems": "Nenhum problema. Os diagnósticos aparecerão quando a análise de Java estiver disponível.",
       "build": "A saída da compilação aparecerá aqui quando a integração de compilação for implementada.",
-      "console": "A saída de processos aparecerá aqui quando a integração de execução for implementada."
+      "console": "Execute o arquivo Java atual para ver a saída."
+    },
+    "console": {
+      "running": "Executando {name}…",
+      "compile_failed": "A compilação falhou (código de saída {code}).",
+      "compile_timed_out": "A compilação excedeu o tempo limite.",
+      "run_finished": "Execução concluída (código de saída 0).",
+      "run_exit": "A execução terminou com o código {code}.",
+      "run_timed_out": "A execução excedeu o tempo limite e foi interrompida.",
+      "run_failed": "Falha ao executar: {error}",
+      "stdout": "Saída padrão",
+      "stderr": "Erro padrão",
+      "no_output": "O programa não produziu saída.",
+      "truncated": "A saída foi truncada no limite de captura."
     }
   },
   "prompt": {
@@ -166,7 +190,9 @@
     "no_document": "Nenhum documento está aberto",
     "nothing_to_undo": "Nada para desfazer",
     "nothing_to_redo": "Nada para refazer",
-    "unknown_command": "Comando desconhecido"
+    "unknown_command": "Comando desconhecido",
+    "not_java": "Abra um arquivo Java para executar",
+    "run_in_progress": "Já existe uma execução Java em andamento"
   },
   "message": {
     "workspace": {
@@ -190,7 +216,14 @@
       "saved": "{name} salvo",
       "document_gone": "O documento não está mais aberto",
       "unsaved_changes": "{name} tem alterações não salvas. Salve-o antes de fechar.",
-      "closed": "{name} fechado"
+      "closed": "{name} fechado",
+      "scratch_save": "Arquivos temporários não são gravados em disco. Use Arquivo › Novo Arquivo… para criar um arquivo."
+    },
+    "run": {
+      "no_document": "Nenhum documento está aberto",
+      "not_java": "O documento ativo não é um arquivo Java",
+      "empty": "Não há código Java para executar",
+      "already_running": "Já existe uma execução Java em andamento"
     },
     "project": {
       "enter_path": "Informe o caminho de uma pasta de projeto.",
