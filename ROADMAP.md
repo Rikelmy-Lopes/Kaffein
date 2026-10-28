@@ -62,7 +62,7 @@ Status uses the vocabulary in [`README.md`](README.md): `Verified`, `Implemented
 | Run/debug workflows | `Partial` | `E3` | `run.execute` compiles and runs the active Java buffer through a temporary file, reports stdout/stderr, exit code, and timeout in the Console tab; `compiles_and_runs_a_source_string` (ignored, JDK 1.8.0_401, 2026-10-28). Gap: no debugger, no cancel command, no environment allowlist |
 | Diagnostics and error navigation | `Unknown` | `E0` | M2: gutter, underline, problem list, jump-to-source |
 | Testing workflows | `Unknown` | `E0` | M3: discover, run, and report JUnit tests |
-| Refactoring and code intelligence | `Unknown` | `E0` | M3: at least rename with preview and undo |
+| Refactoring and code intelligence | `Partial` | `E3` | Context-aware completion for project symbols: `editor.complete` parses the active buffer, resolves locals, parameters, fields, methods, nested types, enum constants, imports, and same-package types against an in-process `SymbolIndex`, and renders a caret-anchored popup. Evidence: `workspace::tests::completion`, `java::completion::tests`, `java::index::tests`, `java::parser::tests` (2026-10-28). Gap: no rename, go-to-declaration, JDK/classpath indexing, explicit completion shortcut, or UI-level interaction test |
 | Version control integration | `Unknown` | `E0` | M3: status, diff, commit as commands |
 | Themes and visual polish | `Partial` | `E1` | `crates/kaffein-ui/src/theme.rs`; `view.toggle_theme` command. Gap: contrast and screenshots not re-measured |
 | Localisation and locale switching | `Implemented` | `E3` | `app.set_locale`; embedded `en`/`pt-BR` catalogs; `every_declared_key_resolves_in_every_bundled_locale`, `switching_a_locale_persists_and_is_restored`, `switching_locale_rerenders_text_captured_before_the_switch`. Gap: Portuguese copy not reviewed by a native speaker; no shipped surface shows a formatted date; plural selection is one/other only |
@@ -161,9 +161,13 @@ listed because their verification is still missing.
 8. **Review the Portuguese catalog.** Have a native speaker check every entry and the
    number/date metadata. *Closed by:* a dated review note in
    [`docs/ui-design.md`](docs/ui-design.md) › Localisation and any corrected catalog entries.
+9. **Extend code intelligence beyond project source.** Index JDK and classpath types, add an explicit
+   completion shortcut, and decide how the index is refreshed for external file changes.
+   *Closed by:* completion tests over a non-project library and recorded index-refresh behaviour in
+   [`docs/architecture.md`](docs/architecture.md) › Java code intelligence.
 
-**Last assessed:** 2026-10-26 (foundation shell launched and tests run on Windows; CI and visual
-verification remain outstanding).
+**Last assessed:** 2026-10-28 (Java parsing, symbol indexing, and completion tests run on Windows;
+CI, visual verification, and UI-level completion interaction remain outstanding).
 
 ## Revision history
 
@@ -180,4 +184,5 @@ verification remain outstanding).
 | 2026-10-28 | Empty editor now shows a read-only `public class Main` sample with syntax highlighting instead of a blank surface | `crates/kaffein-ui/src/tests.rs` › `an_empty_editor_shows_default_java_code` |
 | 2026-10-28 | Semantic Java highlighting: identifiers are classified as types, methods, fields, constants, or plain identifiers using line-local heuristics, and `SyntaxTheme` exposes a colour for each | `crates/kaffein-domain/src/java/lexer/classify/tests.rs`; `crates/kaffein-ui/src/syntax/tests.rs` › `a_custom_theme_can_colour_each_semantic_kind`; `cargo test --workspace` (102 passed) |
 | 2026-10-28 | Startup creates an editable in-memory `Scratch.java` instead of a read-only sample; `run.execute` compiles and runs the active buffer through temporary JDK files and reports output in the Console tab | `cargo test --workspace` (122 passed, 2 ignored); ignored JDK tests passed; app launch smoke test; [`docs/architecture.md`](docs/architecture.md) › Current JDK runner |
+| 2026-10-28 | Context-aware Java completion: token-stream parser, in-process symbol index built on project open and refreshed on open/save, completion engine for locals, members, imports, enums, and keywords, and a caret-anchored egui popup driven by internal commands | `cargo test --workspace` (157 passed, 2 ignored); `cargo fmt --all -- --check`; `cargo clippy --workspace --all-targets --all-features -- -D warnings`; [`docs/architecture.md`](docs/architecture.md) › Java code intelligence; [`docs/ui-design.md`](docs/ui-design.md) › Completion popup |
 

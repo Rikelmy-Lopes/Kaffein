@@ -71,6 +71,10 @@ define_keys! {
     COMMAND_APP_SET_LOCALE_TITLE => "command.app.set_locale.title",
     COMMAND_EDITOR_REPLACE_TEXT_TITLE => "command.editor.replace_text.title",
     COMMAND_EDITOR_ACTIVATE_TITLE => "command.editor.activate.title",
+    COMMAND_EDITOR_COMPLETE_TITLE => "command.editor.complete.title",
+    COMMAND_EDITOR_COMPLETE_SELECT_TITLE => "command.editor.complete_select.title",
+    COMMAND_EDITOR_COMPLETE_ACCEPT_TITLE => "command.editor.complete_accept.title",
+    COMMAND_EDITOR_COMPLETE_DISMISS_TITLE => "command.editor.complete_dismiss.title",
 
     STATUS_NO_PROJECT => "status.no_project",
     STATUS_LINE_COUNT_ONE => "status.line_count.one",
@@ -83,6 +87,7 @@ define_keys! {
 
     EDITOR_WELCOME => "editor.welcome",
     EDITOR_CLOSE_FILE => "editor.close_file",
+    COMPLETION_HINT => "completion.hint",
 
     PROJECT_PANEL_HEADER => "project_panel.header",
     PROJECT_PANEL_OPEN => "project_panel.open",
@@ -170,6 +175,9 @@ define_keys! {
     MESSAGE_EDIT_REPLACE_REQUIRES_TEXT => "message.edit.replace_requires_text",
     MESSAGE_EDIT_DOCUMENT_GONE => "message.edit.document_gone",
     MESSAGE_EDIT_ACTIVATE_REQUIRES_DOCUMENT => "message.edit.activate_requires_document",
+    MESSAGE_COMPLETION_INVALID_ARGS => "message.completion.invalid_args",
+    MESSAGE_COMPLETION_DOCUMENT_GONE => "message.completion.document_gone",
+    MESSAGE_COMPLETION_STALE => "message.completion.stale",
     MESSAGE_VIEW_THEME => "message.view.theme",
     MESSAGE_APP_DIRTY_DOCUMENTS_ONE => "message.app.dirty_documents.one",
     MESSAGE_APP_DIRTY_DOCUMENTS_OTHER => "message.app.dirty_documents.other",

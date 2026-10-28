@@ -9,6 +9,7 @@
 
 mod actions;
 mod bottom_panel;
+mod completion;
 mod editor;
 mod menu;
 mod path_prompt;

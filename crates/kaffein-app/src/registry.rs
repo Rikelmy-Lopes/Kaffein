@@ -8,7 +8,6 @@
 
 mod catalog;
 mod enablers;
-
 use crate::command::{Command, Menu};
 
 pub struct CommandRegistry {

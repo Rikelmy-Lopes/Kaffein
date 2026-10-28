@@ -1,8 +1,9 @@
 # Architecture
 
 > **Document state:** design contract. The crate map, command executor, and current document model
-> were recorded from the workspace on 2026-10-26; the requirements below remain binding. Anything
-> not filled from the repository stays `Unknown`.
+> were recorded from the workspace on 2026-10-26; Java parsing, symbol indexing, and completion were
+> recorded on 2026-10-28. The requirements below remain binding. Anything not filled from the
+> repository stays `Unknown`.
 
 ## Goals
 
@@ -85,11 +86,11 @@ topological order, with the evidence that the row is accurate.
 
 | Crate / package | Responsibility | Depends on | Status | Evidence |
 |---|---|---|---|---|
-| `kaffein-domain` | Documents, project tree data, Java lexical/semantic analysis, and the ports infrastructure implements | standard library only | `Implemented` | `crates/kaffein-domain/src/lib.rs`, `java/`; `cargo tree --depth 1 -p kaffein-domain` (2026-10-28) |
+| `kaffein-domain` | Documents, project tree data, Java lexical/semantic analysis, parsing, symbol indexing, and completion; declares the ports infrastructure implements | standard library only | `Implemented` | `crates/kaffein-domain/src/lib.rs`, `java/`; `cargo tree --depth 1 -p kaffein-domain` (2026-10-28) |
 | `kaffein-i18n` | Locale catalogs, deferred user-facing text, fallback, and culture-specific formatting | standard library, `serde_json 1.0.154` | `Implemented` | `crates/kaffein-i18n/src/`, `locales/`; `cargo tree --depth 1 -p kaffein-i18n` (2026-10-26) |
-| `kaffein-app` | Command registry, single dispatch path, application state, undo orchestration, and Java-run job state | `kaffein-domain`, `kaffein-i18n` | `Implemented` | `crates/kaffein-app/src/registry/`, `workspace.rs`, `state/run.rs`; `cargo tree --depth 1 -p kaffein-app` (2026-10-28) |
+| `kaffein-app` | Command registry, single dispatch path, application state, undo orchestration, symbol-index refresh, completion sessions, and Java-run job state | `kaffein-domain`, `kaffein-i18n` | `Implemented` | `crates/kaffein-app/src/registry/`, `commands/`, `state/`, `workspace.rs`; `cargo tree --depth 1 -p kaffein-app` (2026-10-28) |
 | `kaffein-infra` | Filesystem adapter (UTF-8, size limit), project scanner, external locale storage, and the JDK compile/run adapter | `kaffein-domain`, `kaffein-i18n`, `serde_json 1.0.154` | `Implemented` | `crates/kaffein-infra/src/filesystem.rs`, `project_loader.rs`, `locale_files.rs`, `java_runner.rs`; `cargo tree --depth 1 -p kaffein-infra` (2026-10-28) |
-| `kaffein-ui` | egui views, layout, design tokens, and Java syntax layout; emits commands instead of mutating state | `kaffein-app`, `kaffein-domain`, `kaffein-i18n`, `egui 0.29.1` | `Implemented` | `crates/kaffein-ui/src/lib.rs`, `editor.rs`, `syntax/`, `theme.rs`; `cargo tree --depth 1 -p kaffein-ui` (2026-10-28) |
+| `kaffein-ui` | egui views, layout, design tokens, Java syntax layout, and the completion popup; emits commands instead of mutating state | `kaffein-app`, `kaffein-domain`, `kaffein-i18n`, `egui 0.29.1` | `Implemented` | `crates/kaffein-ui/src/lib.rs`, `editor.rs`, `editor/`, `completion.rs`, `syntax/`, `theme.rs`; `cargo tree --depth 1 -p kaffein-ui` (2026-10-28) |
 | `kaffein` | Desktop binary; constructs infrastructure and wires it into the workspace | `kaffein-app`, `kaffein-i18n`, `kaffein-infra`, `kaffein-ui`, `eframe`/`egui` | `Implemented` | `crates/kaffein/src/main.rs`, `app.rs`; `cargo metadata --no-deps --format-version 1` (2026-10-28) |
 
 Update this table when crates are added, removed, or change responsibility. If a crate's
@@ -129,11 +130,11 @@ Current layout, measured 2026-10-28 with the command in
 
 | Crate | Modules | Largest file | Status |
 |---|---|---|---|
-| `kaffein-domain` | `document/` (model, `line_ending`, tests), `java/` (lexical analysis, semantic classification, source identity, token kinds, tests), `project.rs`, `ports.rs` (including the Java runner port) | `java/lexer/scan.rs` — 280 lines; `document.rs` — 252 lines | `Implemented` |
+| `kaffein-domain` | `document/` (model, `line_ending`, tests), `java/` (lexer, semantic classification, parser, AST, keyword table, symbol index, completion, source identity, token kinds, tests), `project.rs`, `ports.rs` (including the Java runner port) | `java/completion/tests.rs` — 299 lines; `java/completion/resolve.rs` — 290 lines; `java/parser.rs` — 268 lines | `Implemented` |
 | `kaffein-i18n` | `lib.rs` (wiring), `keys.rs` (stable key table), `locale.rs` (language tags), `catalog.rs` (JSON and metadata parsing), `localizer.rs` (active/fallback lookup, switching, formatting), `source.rs` (external catalog seam), `text.rs` (deferred text), `format.rs` (numbers and dates), `tests.rs`; `locales/en.json`, `locales/pt-BR.json` | `localizer.rs` - 253 lines | `Implemented` |
-| `kaffein-app` | `command/` (`command_id`, `args`, `outcome`, `keys`, `placement`), `commands/` (`file`, `edit`, `project`, `run`, `view`, `app`, `helpers`), `registry/` (`catalog`, `enablers`), `state/` (`state`, `run`), `services.rs`, `defaults.rs`, `paths.rs`, `workspace.rs` + `workspace/tests/` | `registry/catalog.rs` - 294 lines | `Implemented` |
+| `kaffein-app` | `command/` (`command_id`, `args`, `outcome`, `keys`, `placement`), `commands/` (`file`, `edit`, `project`, `indexing`, `completion`, `run`, `view`, `app`, `helpers`), `registry/` (`catalog`, `catalog/internal`, `enablers`), `state/` (`state`, `index`, `completion`, `run`), `services.rs`, `defaults.rs`, `paths.rs`, `workspace.rs` + `workspace/tests/` | `state.rs` - 279 lines; `registry/catalog.rs` - 272 lines | `Implemented` |
 | `kaffein-infra` | `filesystem.rs`, `project_loader.rs`, `locale_files.rs`, `java_runner.rs` (JDK compile/run), `test_support.rs` | `java_runner.rs` - 224 lines; `locale_files.rs` - 189 lines | `Implemented` |
-| `kaffein-ui` | `lib.rs` (frame wiring), `actions.rs`, `editor.rs`, `menu.rs`, `toolbar.rs`, `status_bar.rs`, `project_panel.rs`, `bottom_panel.rs` + `bottom_panel/tests.rs` (run console), `path_prompt.rs`, `ui_state.rs`, `syntax/` (`theme`, `cache`, `layout`, `buffer`, tests), `theme.rs`, `tests.rs` | `syntax/cache.rs` - 296 lines | `Implemented` |
+| `kaffein-ui` | `lib.rs` (frame wiring), `actions.rs`, `editor.rs` + `editor/` (`text`, `empty`), `completion.rs`, `menu.rs`, `toolbar.rs`, `status_bar.rs`, `project_panel.rs`, `bottom_panel.rs` + `bottom_panel/tests.rs` (run console), `path_prompt.rs`, `ui_state.rs`, `syntax/` (`theme`, `cache`, `layout`, `buffer`, tests), `theme.rs`, `tests.rs` | `syntax/cache.rs` - 296 lines; `bottom_panel.rs` - 267 lines | `Implemented` |
 | `kaffein` | `main.rs` (entry point), `app.rs` (eframe adapter, startup scratch document, run polling) | `app.rs` - 100 lines | `Implemented` |
 
 Update this table when a module moves, a file crosses the budget, or a crate gains an area. The line
@@ -164,7 +165,7 @@ Required properties:
 The precise command executor, state ownership model, and asynchronous execution mechanism are
 recorded below as they exist in the workspace, not assumed.
 
-**Current registry and dispatch (2026-10-26).** `CommandRegistry` owns one `Command` descriptor per action:
+**Current registry and dispatch (2026-10-28).** `CommandRegistry` owns one `Command` descriptor per action:
 identifier, title key, category key, menu placement, toolbar placement, shortcuts, argument kind,
 enablement predicate, optional checked predicate, and handler. `Workspace::dispatch` is the only
 dispatch path; it resolves the command, validates required path arguments, runs the handler against
@@ -173,8 +174,11 @@ dispatch path; it resolves the command, validates required path arguments, runs 
 locale also re-renders the message already on screen. Menus and the toolbar are generated from the
 registry, and keyboard shortcuts are matched from the same descriptors. The egui layer only collects
 `UiAction` values (command id plus arguments) and the binary dispatches them after the frame.
-Internal commands (`editor.replace_text`, `editor.activate`) and locale switching
-(`app.set_locale`) use the same path without appearing as ordinary menu entries.
+Internal commands (`editor.replace_text`, `editor.activate`, `editor.complete`,
+`editor.complete_select`, `editor.complete_accept`, `editor.complete_dismiss`) and locale switching
+(`app.set_locale`) use the same path without appearing as ordinary menu entries. The UI collects a
+text replacement and a completion request after an edit; the application parses the active buffer,
+stores a completion session, and the UI renders that session on the next frame.
 
 **Current async execution (2026-10-28).** Commands still run on the UI thread, except `run.execute`, which
 validates the active buffer, starts one worker thread through `AppState::start_run`, and returns
@@ -286,6 +290,35 @@ implementation before filling in the details; each row needs a decision and evid
 The UTF indexing unit deserves special attention: the JVM, Rust, and egui do not agree on string
 width. Choose one canonical unit, document it, and convert only at boundaries.
 
+## Java code intelligence
+
+Java completion is a domain feature, not an editor widget. The domain parses the active buffer into a
+small declaration model, resolves visible symbols against that model and the project index, and
+returns plain data (`Completion`, `CompletionItem`). The application owns the active
+`CompletionSession`; the UI only renders it and dispatches completion commands. Status: `Partial` —
+classes, members, locals, parameters, fields, enum constants, project imports, and same-package types
+work, with the gaps listed below.
+
+| Concern | Current behaviour | Status | Evidence |
+|---|---|---|---|
+| Parser model | The token-stream parser records package, imports, type declarations, nested types, fields, methods, constructors, parameters, enum constants, supertypes, and method-local declarations with visibility ranges. It is deliberately error-tolerant and is not a compiler AST | `Implemented` | `crates/kaffein-domain/src/java/parser.rs`, `parser/`, `ast.rs`; `java::parser::tests` |
+| Symbol index | `SymbolIndex` maps file paths to `IndexedFile` values and flattens nested types for lookup by qualified name, simple name, and package. It stores no JDK, classpath, or dependency symbols | `Implemented` | `crates/kaffein-domain/src/java/index.rs`; `java::index::tests` |
+| Index refresh | `project.open` scans the project tree for `.java` files, reads each file, and rebuilds the index; opening a file upserts it; saving upserts the saved text. A project rebuild then overlays every open buffer. Opening a single file indexes only that file, so sibling sources become visible after the project opens. Unsaved edits in other open files are not visible to cross-file completion until save | `Partial` | `crates/kaffein-app/src/commands/indexing.rs`, `commands/project.rs`, `commands/file.rs`; `opening_a_project_indexes_every_java_file`, `opening_a_file_indexes_its_declarations`, `saving_replaces_the_indexed_file` |
+| Index threading | Index construction and file reads run synchronously inside the command, on the UI thread. There is no worker, progress report, cancellation, or staleness token | `Partial` | `index_project`; gap: large-project frame budget has not been measured |
+| Completion context | A non-empty identifier prefix or a receiver before `.` starts completion. Comments, string literals, and character literals suppress it. The active buffer is parsed fresh, so unsaved declarations and locals in the file being edited participate immediately | `Implemented` | `crates/kaffein-domain/src/java/completion.rs`, `completion/context.rs`; `comments_and_strings_suppress_completion`, `an_unknown_prefix_returns_no_completion` |
+| Plain completion | Offers visible locals and parameters, members of the enclosing type and its indexed supertypes, all types in the buffer, explicit and wildcard imports, same-package project types, static-imported members and constants, enum constants, Java keywords, and nested types. Prefix filtering is case-insensitive. It does not model outer-class scope or filter inaccessible private/package-private members of another type | `Implemented` | `completion/resolve.rs`, `completion/model.rs`; `java::completion::tests` |
+| Receiver completion | Resolves `this`, `super`, `new Type(...)`, locals, fields, type names, nested types, chained field access, and indexed supertypes. Static and instance members are both listed; the engine does not yet filter by static context or disambiguate overloads | `Partial` | `completion/resolve/`, `a_this_receiver_lists_instance_members`, `a_field_receiver_resolves_through_the_field_type` |
+| External symbols | An explicit import of an unindexed type contributes its simple name (for example a JDK class) but not its members. Wildcard imports of unindexed packages contribute nothing. Project source is the only symbol source | `Partial` | `completion/resolve.rs`; gap: JDK/classpath indexing |
+| Trigger and insertion | The editor requests completion after every text change. Up/Down move the selection with wraparound, Enter/Tab accept, Esc dismisses, and a pointer click accepts a row. Acceptance replaces the prefix through `Document::replace_text`, so it is undoable as one edit. There is no explicit completion shortcut yet | `Partial` | `crates/kaffein-ui/src/editor/text.rs`, `completion.rs`; `completion_offers_a_field_and_accepting_inserts_it`, `completion_selection_wraps_and_dismiss_clears`; gap: no UI-level interaction test |
+
+Rules that follow from the current design:
+
+- Completion reads only the active buffer and the index; it does not write files or start a tool.
+- A completion insert is a document edit and must stay on the undo stack.
+- The UI must not resolve symbols or parse Java; it renders the session and emits commands.
+- An index entry is a parse snapshot, not a compiler symbol. A feature that needs type checking must
+  not infer it from this index.
+
 ## External Java tooling
 
 The IDE stays implemented in Rust even when it invokes a JDK, compiler, build tool, test runner, or
@@ -326,7 +359,7 @@ affected tables above.
 |---|---|---|
 | Text buffer representation and canonical index unit | Affects every editing command, diagnostics mapping, and performance | `Partial` — UTF-8 `String` normalised to `\n`; no rope or incremental index yet (see [Document model](#document-model)) |
 | Undo granularity and command grouping | Determines how "one user action" is defined across typing, refactors, and tools | `Partial` — 600 ms single-character coalescing; grouping across commands is still open |
-| Indexing strategy (in-process vs long-lived worker) | Dictates memory model and how stale results are rejected | `Unknown` |
+| Indexing strategy (in-process vs long-lived worker) | Dictates memory model and how stale results are rejected | `Partial` — in-process `SymbolIndex` rebuilt synchronously on project open, with file open/save upserts and open-buffer overlays; gap: no worker, cancellation, or external-change invalidation (see [Java code intelligence](#java-code-intelligence)) |
 | Build system integration depth (Gradle/Maven invocation vs native model) | Largest cost driver in the Java workflow stage | `Unknown` |
 | Automation surface (headless CLI, control channel, MCP) and its security model | Determines testability and agent support | `Unknown` |
 | Localisation strategy for UI text | Retrofitting is expensive; see [Localisation](#localisation) and [`ui-design.md`](ui-design.md) | `Implemented` — dynamic locale codes, embedded `en`/`pt-BR`, external catalogs, deferred text, and persistence; evidence in the [Localisation](#localisation) table (2026-10-26). Gap: no native-speaker review of the Portuguese catalog; no shipped surface displays a formatted date; plural selection is one/other only and formatting does not implement the full CLDR rule set (month names, alternate grouping sizes, time zones) |
@@ -335,8 +368,9 @@ affected tables above.
 
 The crate map, module layout, command executor, and most Document model rows were recorded on
 2026-10-26; steps 1–4 and 7 below were executed for the foundation shell. On 2026-10-28, step 5 was
-traced for `run.execute` (`StdJavaRunner`, JDK 1.8.0_401) and the module-layout table was remeasured.
-Remainder:
+traced for `run.execute` (`StdJavaRunner`, JDK 1.8.0_401), the module-layout table was remeasured,
+and [Java code intelligence](#java-code-intelligence) was recorded from the parser, index, commands,
+and tests. Remainder:
 
 1. `cargo metadata --no-deps --format-version 1` → crate map (names, versions, targets).
 2. `cargo tree --depth 1 -p <package>` for each package → dependency edges; flag any upward or
@@ -355,3 +389,8 @@ Remainder:
    adding or renaming a candidate key; the catalog completeness test proves every key in
    [`ALL`](../crates/kaffein-i18n/src/keys.rs) resolves in every bundled catalog (`en`, `pt-BR`).
    Add a plural-family key to both catalogs before referencing it in a command or widget.
+9. Re-run `cargo test --workspace` after changing the parser, index, completion engine, or completion
+   commands. The relevant focused tests are `java::completion::tests`, `java::index::tests`,
+   `java::parser::tests`, and `workspace::tests::completion`. The popup has no UI-level interaction
+   test yet; a change to `kaffein-ui/src/completion.rs` or `editor/text.rs` needs manual launch
+   verification until one is added.

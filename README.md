@@ -19,10 +19,12 @@ implementation.
 
 This repository holds the **Rust workspace** and the **documentation** for the IDE. The workspace
 currently contains a foundation shell: a window, menu/toolbar, project tree, editor tabs, an editor with
-Java syntax highlighting, an editable in-memory Java scratch document, a **Run** command that compiles
-and executes the active buffer through the JDK, bottom tool window tabs with a run console, a status
-bar, design tokens, and a command registry with dispatch and undo. Everything documented elsewhere
-remains design intent until a test, a launch trace, or a dated measurement demonstrates it.
+Java syntax highlighting and context-aware completion, an editable in-memory Java scratch document, a
+**Run** command that compiles and executes the active buffer through the JDK, bottom tool window tabs
+with a run console, a status bar, design tokens, and a command registry with dispatch and undo.
+Completion is backed by an in-process symbol index built from the project and open files. Everything
+documented elsewhere remains design intent until a test, a launch trace, or a dated measurement
+demonstrates it.
 
 The status rules still apply:
 

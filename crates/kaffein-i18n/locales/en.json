@@ -95,6 +95,18 @@
       },
       "activate": {
         "title": "Activate Document"
+      },
+      "complete": {
+        "title": "Complete"
+      },
+      "complete_select": {
+        "title": "Select Completion"
+      },
+      "complete_accept": {
+        "title": "Accept Completion"
+      },
+      "complete_dismiss": {
+        "title": "Dismiss Completion"
       }
     }
   },
@@ -119,6 +131,9 @@
   "editor": {
     "welcome": "No file open — use File › Open File…{shortcut} or open a project.",
     "close_file": "Close file"
+  },
+  "completion": {
+    "hint": "↑↓ move · Enter insert · Esc dismiss"
   },
   "project_panel": {
     "header": "PROJECT",
@@ -238,6 +253,11 @@
       "replace_requires_text": "editor.replace_text requires text arguments",
       "document_gone": "The document is no longer open",
       "activate_requires_document": "editor.activate requires a document argument"
+    },
+    "completion": {
+      "invalid_args": "The completion command received invalid arguments",
+      "document_gone": "The document is no longer open",
+      "stale": "The completion is out of date"
     },
     "view": {
       "theme": "Theme: {theme}"

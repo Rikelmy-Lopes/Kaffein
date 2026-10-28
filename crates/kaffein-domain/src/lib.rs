@@ -11,8 +11,9 @@ pub mod project;
 
 pub use document::{Document, DocumentId, LineEnding};
 pub use java::{
-    package_name, primary_type_name, tokenize, tokenize_line, LexState, LineTokens, Token,
-    TokenKind,
+    complete, package_name, parse, primary_type_name, tokenize, tokenize_line, Completion,
+    CompletionItem, CompletionKind, IndexedFile, IndexedMember, IndexedType, JavaFile, LexState,
+    LineTokens, SymbolIndex, Token, TokenKind,
 };
 pub use ports::{
     FileSystem, FsError, FsErrorKind, JavaRunError, JavaRunErrorKind, JavaRunOutput, JavaRunStage,

@@ -5,17 +5,23 @@
 //! making the module layout flat again.
 
 mod app;
+mod completion;
 mod edit;
 mod file;
 mod helpers;
+mod indexing;
 mod project;
 mod run;
 mod view;
 
 pub(crate) use app::{app_quit, app_set_locale};
+pub(crate) use completion::{
+    editor_complete, editor_complete_accept, editor_complete_dismiss, editor_complete_select,
+};
 pub(crate) use edit::{edit_redo, edit_undo, editor_activate, editor_replace_text};
 pub(crate) use file::{file_close, file_new, file_new_scratch, file_open, file_save};
 pub(crate) use helpers::is_java_document;
+pub(crate) use indexing::{index_project, index_source};
 pub(crate) use project::project_open;
 pub(crate) use run::run_execute;
 pub(crate) use view::{view_toggle_bottom, view_toggle_project, view_toggle_theme};

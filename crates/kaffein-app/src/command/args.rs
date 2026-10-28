@@ -15,6 +15,18 @@ pub enum CommandArgs {
         text: String,
         at_ms: u64,
     },
+    Complete {
+        document: DocumentId,
+        caret: usize,
+    },
+    CompleteSelect {
+        delta: isize,
+    },
+    CompleteAccept {
+        document: DocumentId,
+        at_ms: u64,
+        item: Option<usize>,
+    },
 }
 
 impl CommandArgs {

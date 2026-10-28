@@ -1,6 +1,7 @@
 //! Workspace dispatch tests, split by command area.
 
 mod app;
+mod completion;
 mod edit;
 mod file_close;
 mod file_open;

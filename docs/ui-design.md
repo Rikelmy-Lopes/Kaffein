@@ -231,6 +231,7 @@ Rules:
 | Project tree | Rows, chevrons, file icons, VCS status colour | selected, focused, modified, ignored, loading | Indentation 12 px per level; no horizontal scrolling above 3 levels |
 | Editor tabs | Title, dirty dot, close button, overflow | active, inactive, hover, dirty, error | Middle-click closes; drag reorders; unsaved tabs are visually distinct |
 | Editor surface | Gutter, text, overlays | caret, selection, search hit, current line, breakpoint, folded | See [Editor surface](#editor-surface) |
+| Completion popup | Caret-anchored list, detail text, footer hint | open, filtered, selected, scrolled, dismissed | Positioned below the caret, constrained to the window, minimum 280 px wide, maximum 220 px high with scrolling. Up/Down wrap, Enter/Tab accept, Esc dismisses, and a pointer click accepts the row under the pointer. It opens only when completion has suggestions, and never inside comments, string literals, or character literals |
 | Run console | Summary line, stdout/stderr sections, truncation notice | idle, running, finished, failed, timed out | Auto-selects the Console tab when a run starts. Child output is sanitised before rendering. No cancel control yet; the infrastructure kills a child at its timeout |
 | Breadcrumb | Path segments, dropdown per segment | hover, focused | Hidden if it costs more than one text line of value |
 | Tool window | Title bar, actions, content | collapsed, expanded, focused, pinned | Title bar holds actions, not a menu of menus |
@@ -254,6 +255,7 @@ Rules:
 | Syntax highlighting | Token colours from the document's lexer and line-local classifier mapped through the editor theme; one colour per `TokenKind`, including type, method, field, and constant | `Implemented` — lexer and classifier in `kaffein-domain/src/java/`, colour scheme in `kaffein-ui/src/syntax/theme.rs` (2026-10-28); gap: visual and contrast verification against a running build |
 | Scratch document | Editable in-memory Java sample (`public class Main`) created at startup and by **File › New Scratch File**; no project file is written. **Save** is refused with a message pointing to **New File…**; **Run** compiles and executes the buffer | `Implemented` — `file.new_scratch`, `Document::scratch`, `a_scratch_document_is_editable_and_has_no_path`, `running_a_scratch_document_uses_the_buffer_without_saving_it` (2026-10-28); gap: no save-as, visual verification |
 | No document open | Read-only Java sample with syntax highlighting after every document is closed; the surface stays non-editable until a document opens | `Implemented` — `an_empty_editor_shows_default_java_code` (2026-10-28); gap: visual verification |
+| Code completion | Prefix completion and receiver completion after `.`; the popup uses `surface_raised`, `border`, and `selection_text`, lists label plus detail in monospace, and shows a localised footer hint; acceptance replaces the typed prefix through an undoable document edit | `Implemented` — `editor.complete`, `editor.complete_accept`, `completion_offers_a_field_and_accepting_inserts_it` (2026-10-28); gaps: no explicit completion shortcut, no UI-level interaction test, no visual verification against a running build, and unindexed JDK import members are not offered |
 | Matching bracket | 2 px outline, no fill |
 | Fold marker | In the gutter, visible on hover and always when folded |
 | Inlay hints | 12 px `text_muted`, hideable, never inside the caret's line box |
@@ -357,3 +359,7 @@ Do not imitate a feature visually if the underlying behaviour is not implemented
 7. Launch with both bundled locales, switch language from **View › Language**, and confirm menus,
    prompts, the status message, and the status bar locale name update without a restart; record the
    date and platform.
+8. Type a prefix and a `.` receiver in a Java document with indexed project symbols, exercise
+   Up/Down, Enter/Tab, Esc, and pointer acceptance, and record the build and platform. The command
+   path is covered by `workspace::tests::completion`; the popup and key handling in
+   `kaffein-ui/src/completion.rs` and `editor/text.rs` still need this manual or automated UI check.

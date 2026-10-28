@@ -16,6 +16,8 @@ use super::enablers::{
     project_panel_visible,
 };
 
+mod internal;
+
 const NEW_SHORTCUTS: &[KeyBinding] = &[KeyBinding::ctrl(Key::N)];
 const OPEN_SHORTCUTS: &[KeyBinding] = &[KeyBinding::ctrl(Key::O)];
 const SAVE_SHORTCUTS: &[KeyBinding] = &[KeyBinding::ctrl(Key::S)];
@@ -25,7 +27,7 @@ const RUN_SHORTCUTS: &[KeyBinding] = &[KeyBinding::plain(Key::F5)];
 const QUIT_SHORTCUTS: &[KeyBinding] = &[KeyBinding::ctrl(Key::Q)];
 
 pub(super) fn commands() -> Vec<Command> {
-    vec![
+    let mut commands = vec![
         Command {
             id: command_id::PROJECT_OPEN,
             title_key: keys::COMMAND_PROJECT_OPEN_TITLE,
@@ -264,31 +266,7 @@ pub(super) fn commands() -> Vec<Command> {
             checked: None,
             run: commands::app_set_locale,
         },
-        // Internal commands: registered so tests and future automation use the
-        // same implementation, but not shown in any menu.
-        Command {
-            id: command_id::EDITOR_REPLACE_TEXT,
-            title_key: keys::COMMAND_EDITOR_REPLACE_TEXT_TITLE,
-            category_key: keys::CATEGORY_EDITOR,
-            menu: None,
-            toolbar: None,
-            shortcuts: &[],
-            args: ArgKind::Text,
-            can_execute: always,
-            checked: None,
-            run: commands::editor_replace_text,
-        },
-        Command {
-            id: command_id::EDITOR_ACTIVATE,
-            title_key: keys::COMMAND_EDITOR_ACTIVATE_TITLE,
-            category_key: keys::CATEGORY_EDITOR,
-            menu: None,
-            toolbar: None,
-            shortcuts: &[],
-            args: ArgKind::None,
-            can_execute: always,
-            checked: None,
-            run: commands::editor_activate,
-        },
-    ]
+    ];
+    commands.extend(internal::commands());
+    commands
 }

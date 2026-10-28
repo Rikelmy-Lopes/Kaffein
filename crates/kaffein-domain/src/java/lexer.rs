@@ -15,9 +15,10 @@ mod scan;
 #[cfg(test)]
 mod tests;
 
+use super::keyword::is_keyword;
 use scan::{
-    find_block_comment_end, find_text_block_end, is_ident_start, is_keyword, match_operator,
-    match_punctuation, next_char, scan_identifier, scan_number, scan_quoted,
+    find_block_comment_end, find_text_block_end, is_ident_start, match_operator, match_punctuation,
+    next_char, scan_identifier, scan_number, scan_quoted,
 };
 
 use super::token::{Token, TokenKind};

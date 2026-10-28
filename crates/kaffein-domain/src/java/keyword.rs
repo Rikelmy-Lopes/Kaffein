@@ -1,0 +1,72 @@
+//! Java reserved words plus the contextual keywords the lexer colours.
+//!
+//! `module`, `requires`, `exports`, and the other restricted keywords are not
+//! listed: they are ordinary identifiers in most source files, and colouring
+//! them would produce more false positives than useful highlighting. The
+//! completion engine reuses this list for keyword suggestions.
+
+pub const KEYWORDS: &[&str] = &[
+    "abstract",
+    "assert",
+    "boolean",
+    "break",
+    "byte",
+    "case",
+    "catch",
+    "char",
+    "class",
+    "const",
+    "continue",
+    "default",
+    "do",
+    "double",
+    "else",
+    "enum",
+    "extends",
+    "final",
+    "finally",
+    "float",
+    "for",
+    "goto",
+    "if",
+    "implements",
+    "import",
+    "instanceof",
+    "int",
+    "interface",
+    "long",
+    "native",
+    "new",
+    "package",
+    "private",
+    "protected",
+    "public",
+    "return",
+    "short",
+    "static",
+    "strictfp",
+    "super",
+    "switch",
+    "synchronized",
+    "this",
+    "throw",
+    "throws",
+    "transient",
+    "try",
+    "void",
+    "volatile",
+    "while",
+    "_",
+    "true",
+    "false",
+    "null",
+    "var",
+    "record",
+    "sealed",
+    "permits",
+    "yield",
+];
+
+pub fn is_keyword(word: &str) -> bool {
+    KEYWORDS.contains(&word)
+}

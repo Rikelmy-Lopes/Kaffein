@@ -31,7 +31,9 @@ pub use defaults::DEFAULT_JAVA_SOURCE;
 pub use paths::display_path;
 pub use registry::CommandRegistry;
 pub use services::Services;
-pub use state::{AppState, MessageSeverity, RunState, StatusMessage, ThemePreference};
+pub use state::{
+    AppState, CompletionSession, MessageSeverity, RunState, StatusMessage, ThemePreference,
+};
 pub use workspace::Workspace;
 
 /// Stable identifiers for every command. The strings are the contract used by

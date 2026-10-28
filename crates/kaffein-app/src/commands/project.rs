@@ -7,6 +7,7 @@ use crate::services::Services;
 use crate::state::AppState;
 
 use super::helpers::{fs_error_text, path_from_args, user_error};
+use super::index_project;
 
 pub(crate) fn project_open(
     state: &mut AppState,
@@ -44,5 +45,6 @@ pub(crate) fn project_open(
 
     let name = project.name().to_owned();
     state.set_project(project);
+    index_project(state, services);
     CommandOutcome::success(Text::message(keys::MESSAGE_PROJECT_OPENED).arg("name", name))
 }

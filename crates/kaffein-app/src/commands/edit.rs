@@ -66,6 +66,7 @@ pub(crate) fn editor_replace_text(
     };
 
     target.replace_text(text, at_ms);
+    state.clear_completion();
     CommandOutcome::success_silent()
 }
 

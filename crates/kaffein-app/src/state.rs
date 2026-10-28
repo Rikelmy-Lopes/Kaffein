@@ -1,13 +1,16 @@
 //! Application state read by the UI.
 
+mod completion;
+mod index;
 mod run;
 
+pub use completion::CompletionSession;
 pub use run::RunState;
 pub(crate) use run::{lock_run, RunJob};
 
 use std::sync::{Arc, Mutex};
 
-use kaffein_domain::{Document, DocumentId, ProjectTree};
+use kaffein_domain::{Document, DocumentId, ProjectTree, SymbolIndex};
 use kaffein_i18n::{keys, Text};
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
@@ -77,6 +80,8 @@ pub struct AppState {
     next_document_id: u64,
     run: Arc<Mutex<Arc<RunState>>>,
     next_run_id: u64,
+    index: SymbolIndex,
+    completion: Option<CompletionSession>,
 }
 
 impl AppState {
@@ -93,6 +98,8 @@ impl AppState {
             next_document_id: 1,
             run: Arc::new(Mutex::new(Arc::new(RunState::Idle))),
             next_run_id: 0,
+            index: SymbolIndex::new(),
+            completion: None,
         }
     }
 
@@ -170,11 +177,13 @@ impl AppState {
     pub fn add_document(&mut self, document: Document) {
         self.active = Some(document.id());
         self.documents.push(document);
+        self.clear_completion();
     }
 
     pub fn activate(&mut self, id: DocumentId) -> bool {
         if self.document(id).is_some() {
             self.active = Some(id);
+            self.clear_completion();
             true
         } else {
             false
@@ -193,6 +202,7 @@ impl AppState {
                 .get(index.min(self.documents.len().saturating_sub(1)))
                 .map(Document::id);
         }
+        self.clear_completion();
         Some(removed)
     }
 

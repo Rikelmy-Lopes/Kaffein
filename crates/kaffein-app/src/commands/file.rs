@@ -102,11 +102,13 @@ pub(crate) fn file_open(
     };
 
     let id = state.allocate_document_id();
+    let index_path = canonical.clone();
     let name = canonical
         .file_name()
         .map(|name| name.to_string_lossy().into_owned())
         .unwrap_or_else(|| crate::display_path(&canonical));
     state.add_document(Document::from_loaded(id, canonical, &raw));
+    super::index_source(state, &index_path, &raw);
     CommandOutcome::success(Text::message(keys::MESSAGE_FILE_OPENED).arg("name", name))
 }
 
@@ -144,6 +146,7 @@ pub(crate) fn file_save(
     if let Some(document) = state.document_mut(id) {
         document.mark_saved();
     }
+    super::index_source(state, &path, &text);
     CommandOutcome::success(Text::message(keys::MESSAGE_FILE_SAVED).arg("name", name))
 }
 

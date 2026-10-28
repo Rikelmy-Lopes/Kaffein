@@ -95,6 +95,18 @@
       },
       "activate": {
         "title": "Ativar Documento"
+      },
+      "complete": {
+        "title": "Completar"
+      },
+      "complete_select": {
+        "title": "Selecionar Sugestão"
+      },
+      "complete_accept": {
+        "title": "Aceitar Sugestão"
+      },
+      "complete_dismiss": {
+        "title": "Dispensar Sugestão"
       }
     }
   },
@@ -119,6 +131,9 @@
   "editor": {
     "welcome": "Nenhum arquivo aberto — use Arquivo › Abrir Arquivo…{shortcut} ou abra um projeto.",
     "close_file": "Fechar arquivo"
+  },
+  "completion": {
+    "hint": "↑↓ mover · Enter inserir · Esc dispensar"
   },
   "project_panel": {
     "header": "PROJETO",
@@ -238,6 +253,11 @@
       "replace_requires_text": "editor.replace_text exige argumentos de texto",
       "document_gone": "O documento não está mais aberto",
       "activate_requires_document": "editor.activate exige um argumento de documento"
+    },
+    "completion": {
+      "invalid_args": "O comando de sugestão recebeu argumentos inválidos",
+      "document_gone": "O documento não está mais aberto",
+      "stale": "A sugestão está desatualizada"
     },
     "view": {
       "theme": "Tema: {theme}"
